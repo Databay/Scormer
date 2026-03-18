@@ -1,0 +1,72 @@
+// 
+// English Language File for ScormerObject Plugin
+//
+
+<!-- language file start -->
+obj_xsco#:#Scormer
+objs_xsco#:#Scormer
+obj_xsco_duplicate#:#Copy
+objs_xsco_duplicate#:#Copy Scormer
+obj_xsco_select#:#Select Scormer
+xsco_add#:#Add Scormer
+xsco_new#:#Add New Scormer
+xsco_read#:#Read access to Scormer
+xsco_write#:#Edit Scormer
+xsco_delete#:#Delete Scormer
+xsco_visible#:#Scormer is visible
+xsco_edit_permission#:#Change permission settings
+crs_create_xsco#:#Create Scormer
+grp_create_xsco#:#Create Scormer
+fold_create_xsco#:#Create Scormer
+root_create_xsco#:#Create Scormer
+cat_create_xsco#:#Create Scormer
+content#:#Content
+editmap#:#Edit
+Scormer#:#Scormer
+properties#:#Properties
+edit_properties#:#Edit Properties
+title#:#Title
+description#:#Description
+save#:#Save
+cancel#:#Cancel
+edit#:#Edit
+status#:#Status
+offline#:#Offline
+plugininfo#:#Plugin-Information
+rep_robj_xsco_obj_xsco#:#Scormer
+rep_robj_xsco_Scormer_plugin_configuration#:#Konfiguration
+Scormer_plugin_configuration#:#Configuration
+saving_invoked#:#saved
+Scormer_speichern#:#save Scormer
+Kein_Objekt_aktiv#:#no active object
+neuer_Knotenpunkt#:#new node
+Knotenpunkt_bearbeiten#:#edit node
+Titel#:#Title
+um_mehrere_Knoten_nebeneinander_zu_erstellen#:#to create multiple nodes adjacent
+um_mehrere_Knoten_hintereinander_zu_erstellen#:#to create multiple nodes in a row
+Beschreibung#:#Description
+Schriftfarbe#:#Fontcolor
+Schriftgroesse#:#Fontsize
+Hintergrundfarbe#:#Backgroundcolor
+Rahmenfarbe#:#Bordercolor
+Dicke#:#Thickness
+Art#:#Type
+abgerundet#:#rounded
+rund#:#round
+eckig#:#angular
+unterstrichen#:#underlined
+Verlinkung#:#Linking
+kein_Link#:#no link
+externer_Link#:#external link
+interner_Link#:#internal link
+oder#:#or
+hinzufuegen#:#add node
+bearbeiten#:#edit
+loeschen#:#delete
+umhaengen#:#relocate node
+hieranhaengen#:#attach node to this one
+amEnde#:#at the end
+amAnfang#:#at the beginning
+amAnfangundamEnde#:#at both sides
+ohnePfeilspitzen#:#without
+Diesen_Knoten_inkl_Unterknoten_loeschen#:#delete this node with its subnodes

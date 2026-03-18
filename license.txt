@@ -1,0 +1,36 @@
+Lizenzvereinbarung
+
+Bedingungen
+===========
+
+Mit dem Download, der Installation, dem Gebrauch, dem Übermitteln oder Weitergeben dieser Software
+stimmen Sie dieser Vereinbarung zu.
+
+Bitte lesen Sie die Bedingungen dieser Software aufmerksam durch, bevor Sie die Software einsetzen.
+
+Wenn Sie dieser Lizenz oder Teilen davon nicht zustimmen, benutzen Sie diese Software nicht!
+
+Die Databay AG behält sich alle Rechte die dem Lizenznehmer nicht ausdrücklich eingeräumt wurden vor.
+Die Databay AG behält sich das Eigentum an allen Kopien dieser Software vor.
+
+1) Lizenz
+Sie dürfen diese Software im Rahmen der separaten Nutzungsvereinbarung nutzen.
+Sie dürfen keine Kopien des Softwarepakets oder Teilen daraus weitergeben.
+
+2) Einschränkungen
+Sie dürfen das Softwarepaket und jede einzelne Datei die darin enthalten ist und Teile der Dateien nicht verändern, anpassen, übersetzen,
+verleihen, verkaufen und keine darauf aufbauende weitere Software erstellen.
+
+3) Ungültigkeit der Lizenz
+Die Lizenz zur Nutzung erlischt, auch ohne Kenntnisnahme der Databay AG, sobald eine der Einschränkungen verletzt worden sind.
+Sobald die Lizenz ungültig ist sind sie verpflichtet die Software komplett zu entfernen und nicht weiter zu nutzen.
+
+4) Haftung
+Die Software wird so wie sie ist ausgeliefert und die Databay AG garantiert keinen bestimmten Verwendungszweck.
+Die Databay AG übernimmt keine Haftung für entstandene Schäden, die nicht grob Fahrlässig der Databay AG angelastet werden können.
+
+5) Salvatorische Klausel
+Sollten einzelne Bestimmungen dieser Lizenz unwirksam oder undurchführbar sein, bleibt davon die Wirksamkeit der Lizenz im Übrigen unberührt.
+An die Stelle der unwirksamen oder undurchführbaren Bestimmung soll diejenige wirksame und durchführbare Regelung treten,
+deren Wirkungen der wirtschaftlichen Zielsetzung am nächsten kommen, die der Lizenzgeber mit der unwirksamen bzw. undurchführbaren Bestimmung verfolgt haben.
+Die vorstehenden Bestimmungen gelten entsprechend für den Fall, dass sich die Lizenz als lückenhaft erweist.

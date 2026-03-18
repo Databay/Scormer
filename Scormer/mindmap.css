@@ -1,0 +1,57 @@
+.Scormernode:hover {
+	cursor: pointer;
+}
+.Scormernode {
+	z-index:20;
+	position:absolute;
+	text-align:center;
+	display:inline;
+	padding:5px;
+	border-radius:5px;
+	border:solid 1px red;
+	background-color:white;
+	font-family: verdana;
+}
+
+.rootnode {
+	background-color:gray;
+	color: white;
+	font-weight: bold;
+}
+.nodeactive {
+	background-color: #ffff00;
+	color: black;
+	
+}
+.Scormerbutton {
+	background-color: white;
+	color: black;
+	border: solid 1px gray;
+	border-radius: 5px;
+}
+.Scormerimgbutton {
+    bordeR: 0;
+    background: 0;
+    padding: 0;
+}
+.Scormerbackground {
+	background-image: url(paper-background2.png);
+}
+
+.Scormerextrainfo {
+	background-color: white;
+	width: 290px;
+	
+}
+.Scormerokbutton {
+	border: solid 1px gray;
+	border-radius: 3px;
+}
+.simpletip {
+	font-size: 8pt;
+}
+.Scormertextarea {
+	border: solid 1px gray;
+	border-radius: 3px;
+	background-color: white;
+}

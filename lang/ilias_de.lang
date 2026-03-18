@@ -1,0 +1,72 @@
+// 
+// German Language File for ScormerObject Plugin
+//
+
+<!-- language file start -->
+obj_xsco#:#Scormer
+objs_xsco#:#Scormer
+obj_xsco_duplicate#:#Kopieren
+objs_xsco_duplicate#:#Scormer kopieren
+obj_xsco_select#:#Scormer auswählen
+xsco_add#:#Scormer hinzufügen
+xsco_new#:#Scormer neu anlegen
+xsco_read#:#Lesenzugriff Scormer
+xsco_write#:#Scormer bearbeiten
+xsco_delete#:#Scormer löschen
+xsco_visible#:#Scormer ist sichtbar
+xsco_edit_permission#:#Rechte ändern
+crs_create_xsco#:#Erstelle Scormer
+grp_create_xsco#:#Erstelle Scormer
+fold_create_xsco#:#Erstelle Scormer
+root_create_xsco#:#Erstelle Scormer
+cat_create_xsco#:#Erstelle Scormer
+content#:#Inhalt
+editmap#:#Bearbeiten
+Scormer#:#Scormer
+properties#:#Einstellungen
+edit_properties#:#Einstellungen bearbeiten
+title#:#Titel
+description#:#Beschreibung
+save#:#Speichern
+cancel#:#Abbruch
+edit#:#Bearbeiten
+status#:#Status
+offline#:#Offline
+plugininfo#:#Plugin-Information
+rep_robj_xsco_obj_xsco#:#Scormer
+rep_robj_xsco_Scormer_plugin_configuration#:#Konfiguration
+Scormer_plugin_configuration#:#Konfiguration
+saving_invoked#:#gespeichert
+Scormer_speichern#:#Scormer speichern
+Kein_Objekt_aktiv#:#Kein Objekt aktiv
+neuer_Knotenpunkt#:#neuer Knotenpunkt
+Knotenpunkt_bearbeiten#:#Knotenpunkt bearbeiten
+Titel#:#Titel
+um_mehrere_Knoten_nebeneinander_zu_erstellen#:#um mehrere Knoten nebeneinander zu erstellen
+um_mehrere_Knoten_hintereinander_zu_erstellen#:#um mehrere Knoten hintereinander zu erstellen
+Beschreibung#:#Beschreibung
+Schriftfarbe#:#Schriftfarbe
+Schriftgroesse#:#Schriftgr&ouml;&szlig;e
+Hintergrundfarbe#:#Hintergrundfarbe
+Rahmenfarbe#:#Rahmenfarbe
+Dicke#:#Dicke
+Art#:#Art
+abgerundet#:#abgerundet
+rund#:#rund
+eckig#:#eckig
+unterstrichen#:#unterstrichen
+Verlinkung#:#Verlinkung
+kein_Link#:#kein Link
+externer_Link#:#externer Link
+interner_Link#:#interner Link
+oder#:#oder
+hinzufuegen#:#Knoten anf&uuml;gen
+bearbeiten#:#bearbeiten
+loeschen#:#loeschen
+umhaengen#:#Knoten umhängen
+hieranhaengen#:#an markierten Knoten anhängen
+amEnde#:#am Ende
+amAnfang#:#am Anfang
+amAnfangundamEnde#:#am Anfang und am Ende
+ohnePfeilspitzen#:#ohne Pfeilspitze
+Diesen_Knoten_inkl_Unterknoten_loeschen#:#Diesen Knoten inkl. Unterknoten l&ouml;schen
