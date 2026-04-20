@@ -47,24 +47,12 @@ class ilObjScormerGUI extends ilObjectPluginGUI {
 	function performCommand(string $cmd): void {
 		global $ilCtrl;
 
-		$this->proxyTarget = $ilCtrl->getLinkTarget($this, "proxy");
-		$this->listTarget = $ilCtrl->getLinkTarget($this, "projects");
-		$this->indexTarget = $ilCtrl->getLinkTarget($this, "project");
 		$this->apiTarget = $ilCtrl->getLinkTarget($this, "api");
-
+		
 		$this->activeCmd = $cmd;
 		switch($cmd) {
+			case "showEdit":
 			case "showContent":
-			case "api":
-			case "proxy":
-			case "projects":
-			case "project":
-			case "projectMetadata":
-			case "textablage":
-			case "medien":
-			case "slides":
-			case "themes":
-			case "export":
 				$this->checkPermission("write");
 				$this->$cmd();
 				break;
@@ -131,15 +119,8 @@ class ilObjScormerGUI extends ilObjectPluginGUI {
 	function setTabs(): void {
 		global $ilTabs, $ilCtrl, $ilAccess;
 
-		$ilTabs->addTab("projects", "Projekte", $ilCtrl->getLinkTarget($this, "projects"));
-		if($_GET["cmd"]!="projects") {
-			$ilTabs->addTab("project", "Projekt-Metadaten", $ilCtrl->getLinkTarget($this, "project")."&view=meta&project=".$_GET["project"]);
-			$ilTabs->addTab("themes", "Themes", $ilCtrl->getLinkTarget($this, "project")."&view=themes&project=".$_GET["project"]);
-			$ilTabs->addTab("textablage", "Textablage", $ilCtrl->getLinkTarget($this, "project")."&view=textablage&project=".$_GET["project"]);
-			$ilTabs->addTab("medien", "Medien", $ilCtrl->getLinkTarget($this, "project")."&view=medien&project=".$_GET["project"]);
-			$ilTabs->addTab("slides", "Slides", $ilCtrl->getLinkTarget($this, "project")."&view=slides&project=".$_GET["project"]);
-			$ilTabs->addTab("export", "Vorschau/Export", $ilCtrl->getLinkTarget($this, "project")."&view=export&project=".$_GET["project"]);
-		}
+		$ilTabs->addTab("showContent", "Vorschau", $ilCtrl->getLinkTarget($this, "showContent"));
+		$ilTabs->addTab("showEdit", "Bearbeiten", $ilCtrl->getLinkTarget($this, "showEdit"));
 
 		if ($ilAccess->checkAccess("write", "", $this->object->getRefId())) {
 			$ilTabs->addTab("properties", $this->txt("properties"), $ilCtrl->getLinkTarget($this, "editProperties"));
@@ -148,207 +129,6 @@ class ilObjScormerGUI extends ilObjectPluginGUI {
 		$this->addPermissionTab();
 	}
 
-	function api() {
-		global $DIC;
-
-		// Request-Objekt holen
-		$request = $DIC->http()->request();
-
-// Alle Query-Parameter als Array
-		$queryParams = $request->getQueryParams();
-		$postParams = $request->getParsedBody();
-
-		$file = $_GET["apifile"];
-		if ($file != "") {
-			$url = $this->ScormerBaseUrl . "/api" . $file;
-
-			#$queryParams = json_decode(json_encode($_GET),true);
-			#unset($queryParams['file']);
-
-			if (!empty($queryParams)) {
-				$url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($queryParams);
-			}
-			#if(stristr($url, "media.php"))  {echo $url;exit;}
-			$options = [
-				'http' => [
-					'method' => $_SERVER['REQUEST_METHOD'],
-					'ignore_errors' => true
-				]
-			];
-
- 		if ($_SERVER['REQUEST_METHOD'] === 'POST'
-				|| $_SERVER['REQUEST_METHOD'] === 'PUT'
-				|| $_SERVER['REQUEST_METHOD'] === 'DELETE'
-			) {
-				$contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'application/x-www-form-urlencoded';
-
- 			// multipart/form-data via cURL weiterleiten (auch ohne Dateien, da php://input bei multipart leer ist)
-				if (strpos($contentType, 'multipart/form-data') !== false) {
-					//$postFields = json_decode(json_encode($_POST),true);
-					$postFields = $postParams;
-					foreach ($_FILES as $key => $fileInfo) {
-						if ($fileInfo['error'] === UPLOAD_ERR_OK) {
-							$postFields[$key] = new \CURLFile(
-								$fileInfo['tmp_name'],
-								$fileInfo['type'],
-								$fileInfo['name']
-							);
-						}
-					}
-
-					$ch = curl_init($url);
-					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-					curl_setopt($ch, CURLOPT_POST, true);
-					curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
-					curl_setopt($ch, CURLOPT_HEADER, true);
-					$response = curl_exec($ch);
-					$headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-					$responseHeaders = substr($response, 0, $headerSize);
-					$res = substr($response, $headerSize);
-					curl_close($ch);
-
-					foreach (explode("\r\n", $responseHeaders) as $header) {
-						if (stripos($header, 'Content-Type:') === 0) {
-							header($header);
-						}
-					}
-
-					echo $res;
-					exit;
-				}
-
-				$options['http']['header'] = "Content-Type: " . $contentType . "\r\n";
-				$options['http']['content'] = file_get_contents('php://input');
-			}
-
-			$context = stream_context_create($options);
-			$res = file_get_contents($url, false, $context);
-
-			if (isset($http_response_header)) {
-				foreach ($http_response_header as $header) {
-					if (stripos($header, 'Content-Type:') === 0) {
-						header($header);
-					}
-				}
-			}
-
-			echo $res;
-		}
-		exit;
-	}
-
-	function proxy() {
-		$file = $_GET["apifile"];
-		if ($file != "") {
-			$url = $this->ScormerBaseUrl . "/" . $file;
-			$ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-
-			$mime_types = [
-				'css' => 'text/css',
-				'js' => 'application/javascript',
-				'json' => 'application/json',
-				'png' => 'image/png',
-				'jpg' => 'image/jpeg',
-				'jpeg' => 'image/jpeg',
-				'gif' => 'image/gif',
-				'svg' => 'image/svg+xml'
-			];
-
-			if (isset($mime_types[$ext])) {
-				header('Content-Type: ' . $mime_types[$ext]);
-			}
-
-			$res = file_get_contents($url);
-			$res = str_replace(".php?", ".php&", $res);
-
-			$res = str_replace('index.php?', '', $res);
-
-			echo $res;
-		}
-		exit;
-	}
-
-	function projects() {
-		global $tpl, $ilTabs;
-		$ilTabs->activateTab("projects");
-
-		$this->dataDir = ilFileUtils::getDataDir().'/Scormer';
-		if (!file_exists($this->dataDir)) {
-			ilFileUtils::makeDirParents($this->dataDir);
-		}
-
-		$html = file_get_contents($this->ScormerBaseUrl."/list.php");
-
-		$html = str_replace('project.php?project', 'project.php&project', $html);
-		$html = str_replace('href="list.php?', 'href="' . $this->listTarget . '&', $html);
-		$html = str_replace('href="list.php"', 'href="' . $this->listTarget . '"', $html);
-		$html = str_replace('href="index.php?', 'href="' . $this->indexTarget . '&', $html);
-		$html = str_replace('href="index.php"', 'href="' . $this->indexTarget . '"', $html);
-		$html = str_replace("href = 'index.php?", "href = '" . $this->indexTarget . "&", $html);
-		$html = str_replace('href="assets/', 'href="' . $this->proxyTarget . '&apifile=assets/', $html);
-		$html = str_replace('src="assets/', 'src="' . $this->proxyTarget . '&apifile=assets/', $html);
-
-		$html = str_replace('##ILIASAPIBASE##', $this->apiTarget."&project=".$_GET["project"]."&apifile=", $html);
-		$html = str_replace('##ILIASAPIBASENOUUID##', $this->apiTarget."&apifile=", $html);
-
-		$tpl->setContent($html);
-	}
-
-	function project() {
-		global $tpl, $ilTabs;
-		#$this->projectMetadata();
-
-		$html = file_get_contents($this->ScormerBaseUrl."/index.php?project=".$_GET["project"]);
-
-		$html = str_replace('href="list.php?', 'href="'.$this->listTarget.'&', $html);
-		$html = str_replace('href="list.php"', 'href="'.$this->listTarget.'"', $html);
-		$html = str_replace('href="index.php?', 'href="'.$this->indexTarget.'&', $html);
-		$html = str_replace('href="index.php"', 'href="'.$this->indexTarget.'"', $html);
-		$html = str_replace("href = 'index.php?", "href = '" . $this->indexTarget . "&", $html);
-		$html = str_replace('href="assets/', 'href="'.$this->proxyTarget.'&apifile=assets/', $html);
-		$html = str_replace('src="assets/', 'src="'.$this->proxyTarget.'&apifile=assets/', $html);
-
-		$html = str_replace('##ILIASAPIBASE##', $this->apiTarget."&project=".$_GET["project"]."&apifile=", $html);
-		$html = str_replace('##ILIASAPIBASENOUUID##', $this->apiTarget."&apifile=", $html);
-
-		$tpl->setContent($html);
-		if(isset($_GET["view"])) {
-			$view = $_GET["view"];
-			$ilTabs->activateTab($view);
-		} else {
-			$ilTabs->activateTab("project");
-		}
-//		if (method_exists($this, $view)) {
-//		}
-//		$this->$view();
-
-	}
-
-	function projectMetadata() {
-		global $tpl, $ilTabs;
-		$ilTabs->activateTab("projectMetadata");
-
-	}
-	function textablage() {
-		global $tpl, $ilTabs;
-		$ilTabs->activateTab("textablage");
-	}
-	function medien() {
-		global $tpl, $ilTabs;
-		$ilTabs->activateTab("medien");
-	}
-	function themes() {
-		global $tpl, $ilTabs;
-		$ilTabs->activateTab("themes");
-	}
-	function slides() {
-		global $tpl, $ilTabs;
-		$ilTabs->activateTab("slides");
-	}
-	function export() {
-		global $tpl, $ilTabs;
-		$ilTabs->activateTab("export");
-	}
 
 	/**
 	 * Edit Properties. This commands uses the form class to display an input form.
@@ -414,18 +194,14 @@ class ilObjScormerGUI extends ilObjectPluginGUI {
 		$tpl->setContent($this->form->getHtml());
 	}
 
+	
 	/**
 	 * Show content
 	 */
 	function showContent() {
-
-		$_GET["view"] = "project";
-		$this->projects();
-		return;
-
 		global $tpl, $ilTabs;
 
-		$ilTabs->activateTab("content");
+		$ilTabs->activateTab("showContent");
 
 		$this->dataDir = ilFileUtils::getDataDir().'/Scormer';
 		if (!file_exists($this->dataDir)) {
@@ -433,37 +209,39 @@ class ilObjScormerGUI extends ilObjectPluginGUI {
 		}
 
 		$fn = $this->dataDir.'/Scormer_'.$this->object->getRefId().'.json';
-
 		$data = "";
 		if (file_exists($fn)) {
-			$data = file_get_contents($fn);
+			$data = json_decode(file_get_contents($fn), true);
 		}
-
-		if ($data == "") {
-			$data = '{"edges": [], "nodes": {"root": {"id": "root", "title":"Scormer", "x":0, "y":0}}}';
+		if ($data === "") {
+			$data = [];
+			$data["uuid"] = $this->uuidv4();
+			file_put_contents($fn, json_encode($data, JSON_PRETTY_PRINT));
 		}
+		
+		// Rolle: 'editor' für Vollzugriff, 'preview' für reine Vorschau
+		$role = 'preview';
+		$accessKey = 'dev-preview-key'; // Passender Key für die Rolle aus config/app.php
+		
+		$token = $this->getToken($role, $accessKey);
 
-		$D = json_decode($data, true);
-		$intern = array();
-		foreach ($D['nodes'] as $key => $node) {
-			if (isset($node["linktype"]) && $node["linktype"] == "intern") {
-				if (is_file("./classes/class.ilLink.php")) {
-					include_once("./classes/class.ilLink.php");
-				} else {
-					include_once("./Services/Link/classes/class.ilLink.php");
-				}
-				$interlink = ilLink::_getLink($node['linktarget']);
-
-				$intern[$node['linktarget']] = $interlink;
-			}
+				
+		$scormerUrl = 'https://scormer.invorbereitung.de';
+		$projectUuid = $data["uuid"];
+		
+		$myUserId = '5';
+		$myUserName = 'JohnDoe';
+	
+		if ($token === '') {
+			$html ='Kein Token in der Antwort erhalten';
+		} else {
+		
+			#$html = $data["uuid"]."<br>".$response;
+			
+			$go = $scormerUrl . '/' . $projectUuid . '?token=' . $token;
+			#$html = "<a style='display:inline-block;margin: 20px;padding: 20px;border: solid 1px gray;' href='".$go."' target='_blank'>SCORMer - Preview öffnen</a>";
+			$html = "<iframe src='".$go."' style='width: 100%;height: 700px;'></iframe>";
 		}
-
-		$html = file_get_contents(dirname(__FILE__)."/../templates/mm_lang.html");
-		$html .= file_get_contents(dirname(__FILE__)."/../templates/mm.html");
-		$html = str_replace("#ScormerDATA#", $data, $html);
-		$html = str_replace("#INTERNLINKS#", json_encode($intern), $html);
-
-		$html = $this->translate($html);
 
 		$tpl->setContent($html);
 	}
@@ -474,7 +252,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI {
 	function showEdit() {
 		global $tpl, $ilTabs;
 
-		$ilTabs->activateTab("edit");
+		$ilTabs->activateTab("showEdit");
 
 		$this->dataDir = ilFileUtils::getDataDir().'/Scormer';
 		if (!file_exists($this->dataDir)) {
@@ -482,19 +260,118 @@ class ilObjScormerGUI extends ilObjectPluginGUI {
 		}
 
 		$fn = $this->dataDir.'/Scormer_'.$this->object->getRefId().'.json';
+		$data = "";
+		if (file_exists($fn)) {
+			$data = json_decode(file_get_contents($fn), true);
+		}
+		if ($data === "") {
+			$data = [];
+			$data["uuid"] = $this->uuidv4();
+			file_put_contents($fn, json_encode($data, JSON_PRETTY_PRINT));
+		}
 
+		// Rolle: 'editor' für Vollzugriff, 'preview' für reine Vorschau
+		$role = 'editor';
+		$accessKey = 'dev-editor-key'; // Passender Key für die Rolle aus config/app.php
 
-
-		$html = file_get_contents(dirname(__FILE__)."/../templates/mm_lang.html");
-		$html .= file_get_contents(dirname(__FILE__)."/../templates/mm_edit.html");
-
-		#$html = str_replace("#ScormerDATA#", $data, $html);
-
-		#$html = $this->translate($html);
+		$token = $this->getToken($role, $accessKey);
+		#$tpl->setContent($token);return;
+				
+		$scormerUrl = 'https://scormer.invorbereitung.de';
+		$projectUuid = $data["uuid"];
+		
+		$myUserId = '5';
+		$myUserName = 'JohnDoe';
+	
+		if ($token === '') {
+			$html ='Kein Token in der Antwort erhalten';
+		} else {
+		
+			#$html = $data["uuid"]."<br>".$response;
+			
+			$go = $scormerUrl . '/' . $projectUuid . '?token=' . $token;
+			$html = "<a style='display:inline-block;margin: 20px;padding: 20px;border: solid 1px gray;' href='".$go."' target='scormereditor' class='scormereditorlink'>SCORMer - Editor öffnen</a>";
+			$html .= "<div style='display:none;margin: 20px;padding: 20px;border: solid 1px gray;' class='scormereditorlinkrefresh'>Bitte neu laden.</div>";
+			
+			$html .= "<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.scormereditorlink').forEach(function (el) {
+        el.addEventListener('click', function () {
+            var self = this;
+            setTimeout(function () {
+                self.style.display = 'none';
+                
+                 // andere Elemente einblenden
+                document.querySelectorAll('.scormereditorlinkrefresh').forEach(function (refreshEl) {
+                    refreshEl.style.display = 'inline-block';
+                });
+                
+            }, 1000);
+        });
+    });
+});
+</script>";
+		}
 
 		$tpl->setContent($html);
 	}
 
+	private function getToken($role, $accessKey) {
+		
+		$scormerUrl = 'https://scormer.invorbereitung.de';
+		
+		$myUserId = '5';
+		$myUserName = 'JohnDoe';
+		
+
+		// --- Token vom Scormer anfordern ---
+		$ch = curl_init($scormerUrl . '/api/auth/token');
+		curl_setopt_array($ch, [
+			CURLOPT_POST => true,
+			CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+			CURLOPT_POSTFIELDS => json_encode([
+				'access_key' => $accessKey,
+				'role' => $role,
+				'user_id' => $myUserId,
+				'user_name' => $myUserName,
+			]),
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_TIMEOUT => 10,
+		]);
+		
+		$response = curl_exec($ch);
+
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+
+		$token = "";
+		if ($httpCode !== 201 || $response === false) {
+			$html = 'Fehler beim Anfordern des Tokens (HTTP ' . $httpCode . ')';
+		} else {
+		
+			$result = json_decode($response, true);
+			$token = $result['data']['token'] ?? '';
+			
+			if ($token === '') {
+				$html = 'Kein Token in der Antwort erhalten';
+			} 
+		}
+		return $token;
+
+	}
+	
+	private function uuidv4() {
+		$data = random_bytes(16);
+	
+		// Version auf 0100 setzen (UUID v4)
+		$data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+	
+		// Variant auf 10xxxxxx setzen
+		$data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+	
+		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+	}
+	
 	private function translate($html) {
 		$anz = preg_match_all("/#!(.*?)!#/", $html, $matches);
 
