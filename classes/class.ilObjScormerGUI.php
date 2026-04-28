@@ -69,7 +69,104 @@ class ilObjScormerGUI extends ilObjectPluginGUI
                 $this->checkPermission("read");   // oder "write", je nach Bedarf
                 $this->myOutput();
                 break;
+            case "targetSelect":
+            case "saveTarget":
+            case "cancelTarget":
+                $this->checkPermission("write");
+                $this->$cmd();
+                break;
         }
+    }
+
+    function targetSelect(): void
+    {
+        global $DIC;
+
+        $ilTabs = $DIC->tabs();
+        $ilTabs->activateTab("showEdit");
+
+        $ui_factory = $DIC['ui.factory'];
+
+        $exp = new ilRepositorySelectorExplorerGUI($this, "targetSelect");
+        $exp->setTypeWhiteList(["root", "cat", "grp", "crs", "fold"]);
+        $exp->setSelectMode("target", false);
+
+        if ($exp->handleCommand()) {
+            return;
+        }
+
+        $output = $exp->getHTML();
+
+        $t = new ilToolbarGUI();
+        $t->setFormAction($DIC->ctrl()->getFormAction($this, "saveTarget"));
+
+        $primary_button = $ui_factory->button()->primary(
+            $DIC->language()->txt('select'),
+            ''
+        )->withOnLoadCode(
+            function ($id) {
+                return "document.getElementById('$id')"
+                    . '.addEventListener("click", '
+                    . '(e) => {e.preventDefault();'
+                    . 'e.target.setAttribute("name", "cmd[saveTarget]");'
+                    . 'e.target.form.requestSubmit(e.target);});';
+            }
+        );
+        $t->addComponent($primary_button);
+
+        $cancel_btn = $ui_factory->button()->standard(
+            $DIC->language()->txt('cancel'),
+            ''
+        )->withOnLoadCode(
+            function ($id) {
+                return "document.getElementById('$id')"
+                    . '.addEventListener("click", '
+                    . '(e) => {e.preventDefault();'
+                    . 'e.target.setAttribute("name", "cmd[cancelTarget]");'
+                    . 'e.target.form.requestSubmit(e.target);});';
+            }
+        );
+        $t->addComponent($cancel_btn);
+
+        $t->setCloseFormTag(false);
+        $t->setLeadingImage(ilUtil::getImagePath("nav/arrow_upright.svg"), " ");
+        $output = $t->getHTML() . $output;
+
+        $t->setLeadingImage(ilUtil::getImagePath("nav/arrow_downright.svg"), " ");
+        $t->setCloseFormTag(true);
+        $t->setOpenFormTag(false);
+        $output .= "<br />" . $t->getHTML();
+
+        $info = "<p>Bitte wählen Sie das Ziel für das SCORMer-Lernmodul.</p>";
+
+        $DIC->ui()->mainTemplate()->setContent($info . $output);
+    }
+
+    function saveTarget(): void
+    {
+        global $DIC;
+
+        $target_ref_id = (int) ($_POST["target"] ?? 0);
+
+        if ($target_ref_id <= 0) {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage("failure", $DIC->language()->txt("select_one"), true);
+            $DIC->ctrl()->redirect($this, "targetSelect");
+            return;
+        }
+
+        $DIC->ui()->mainTemplate()->setOnScreenMessage(
+            "success",
+            "Ziel ausgewählt: " . ilObject::_lookupTitle(ilObject::_lookupObjId($target_ref_id))
+                . " (Ref-ID: " . $target_ref_id . ")",
+            true
+        );
+        $DIC->ctrl()->redirect($this, "showEdit");
+    }
+
+    function cancelTarget(): void
+    {
+        global $DIC;
+        $DIC->ctrl()->redirect($this, "showEdit");
     }
 
     function myOutput(): void
@@ -206,7 +303,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
             $this->object->setTitle($this->form->getInput("title"));
             $this->object->setDescription($this->form->getInput("desc"));
             $this->object->update();
-            ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
+            $tpl->setOnScreenMessage("success", $lng->txt("msg_obj_modified"), true);
             $ilCtrl->redirect($this, "editProperties");
         }
 
@@ -312,7 +409,11 @@ class ilObjScormerGUI extends ilObjectPluginGUI
             #$html = $data["uuid"]."<br>".$response;
 
             $go = $scormerUrl . '/' . $projectUuid . '?token=' . $token;
-            $html = "<a style='display:inline-block;margin: 20px;padding: 20px;border: solid 1px gray;' href='" . $go . "' target='scormereditor' class='scormereditorlink'>SCORMer - Editor öffnen</a>";
+            $html = "<a style='display:inline-block;margin: 20px;padding: 20px;border: solid 1px gray;' 
+                        href='" . $go . "' 
+                        target='scormereditor' 
+                        class='scormereditorlink' 
+                        onclick='event.preventDefault(); window.open(\"" . $go . "\", \"scormereditor\", \"resizable=yes\");'>SCORMer - Editor öffnen</a>";
             $html .= "<div style='display:none;margin: 20px;padding: 20px;border: solid 1px gray;' class='scormereditorlinkrefresh'>Bitte neu laden.</div>";
 
             $html .= "<script>
