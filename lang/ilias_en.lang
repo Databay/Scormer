@@ -37,6 +37,9 @@ rep_robj_xsco_obj_xsco#:#Scormer
 rep_robj_xsco_Scormer_plugin_configuration#:#Konfiguration
 Scormer_plugin_configuration#:#Configuration
 saving_invoked#:#saved
+scormer_base_url#:#Scormer backend URL
+scormer_preview_api_key#:#API key for preview
+scormer_editor_api_key#:#API key for editing
 Scormer_speichern#:#save Scormer
 Kein_Objekt_aktiv#:#no active object
 neuer_Knotenpunkt#:#new node

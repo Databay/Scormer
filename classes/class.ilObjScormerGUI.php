@@ -23,10 +23,16 @@
  */
 class ilObjScormerGUI extends ilObjectPluginGUI
 {
+    private const DEFAULT_SCORMER_CONFIG = [
+        'scormer_base_url' => 'https://scormer.invorbereitung.de',
+        'scormer_preview_api_key' => '',
+        'scormer_editor_api_key' => '',
+    ];
+
     protected $activeCmd = "projects";
     protected $ScormerBaseUrl = "https://scormer.invorbereitung.de";
-    protected $ScormerAccessKeyEditor = "dev-editor-key";
-    protected $ScormerAccessKeyPreview = "dev-preview-key";
+    protected $ScormerAccessKeyEditor = "";
+    protected $ScormerAccessKeyPreview = "";
     protected $proxyTarget = "";
     protected $listTarget = "";
     protected $apiTarget = "";
@@ -34,7 +40,10 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     /**
      * Initialisation
      */
-    protected function afterConstructor(): void {}
+    protected function afterConstructor(): void
+    {
+        $this->loadScormerConfiguration();
+    }
 
     /**
      * Get type.
@@ -257,6 +266,48 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     private function getProjectDataPath(): string
     {
         return 'Scormer/Scormer_' . $this->object->getRefId() . '.json';
+    }
+
+    private function getConfigurationDataPath(): string
+    {
+        return 'Scormer/Scormer_config.json';
+    }
+
+    private function readScormerConfiguration(): array
+    {
+        global $DIC;
+
+        $storage = $DIC->filesystem()->storage();
+        $filePath = $this->getConfigurationDataPath();
+
+        if (!$storage->has($filePath)) {
+            return self::DEFAULT_SCORMER_CONFIG;
+        }
+
+        $decoded = json_decode($storage->read($filePath), true);
+        if (!is_array($decoded)) {
+            return self::DEFAULT_SCORMER_CONFIG;
+        }
+
+        $config = array_merge(
+            self::DEFAULT_SCORMER_CONFIG,
+            array_intersect_key($decoded, self::DEFAULT_SCORMER_CONFIG)
+        );
+
+        if (trim((string) $config['scormer_base_url']) === '') {
+            $config['scormer_base_url'] = self::DEFAULT_SCORMER_CONFIG['scormer_base_url'];
+        }
+
+        return $config;
+    }
+
+    private function loadScormerConfiguration(): void
+    {
+        $config = $this->readScormerConfiguration();
+
+        $this->ScormerBaseUrl = rtrim((string) $config['scormer_base_url'], '/');
+        $this->ScormerAccessKeyPreview = (string) $config['scormer_preview_api_key'];
+        $this->ScormerAccessKeyEditor = (string) $config['scormer_editor_api_key'];
     }
 
     private function getOrCreateProjectData(): array

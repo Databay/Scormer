@@ -13,6 +13,12 @@
  */
 class ilScormerConfigGUI extends ilPluginConfigGUI
 {
+    private const DEFAULT_CONFIG = [
+        'scormer_base_url' => 'https://scormer.invorbereitung.de',
+        'scormer_preview_api_key' => '',
+        'scormer_editor_api_key' => '',
+    ];
+
 	/**
 	* Handles all commmands, default is "configure"
 	*/
@@ -58,19 +64,51 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 	
 		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI();
-	
-	
+
+        $config = $this->readConfiguration();
+
+        $baseUrl = new ilTextInputGUI($pl->txt("scormer_base_url"), "scormer_base_url");
+        $baseUrl->setRequired(true);
+        $form->addItem($baseUrl);
+
+        $previewApiKey = new ilTextInputGUI($pl->txt("scormer_preview_api_key"), "scormer_preview_api_key");
+        $form->addItem($previewApiKey);
+
+        $editorApiKey = new ilTextInputGUI($pl->txt("scormer_editor_api_key"), "scormer_editor_api_key");
+        $form->addItem($editorApiKey);
+
 		$form->addCommandButton("save", $lng->txt("save"));
 	                
 		$form->setTitle($pl->txt("Scormer_plugin_configuration"));
 		$form->setFormAction($ilCtrl->getFormAction($this));
-		
+
+        $form->setValuesByArray($config);
+
 		return $form;
 	}
 	
     private function getProjectDataPath(): string
     {
         return 'Scormer/Scormer_config.json';
+    }
+
+    private function readConfiguration(): array
+    {
+        global $DIC;
+
+        $storage = $DIC->filesystem()->storage();
+        $filePath = $this->getProjectDataPath();
+
+        if (!$storage->has($filePath)) {
+            return self::DEFAULT_CONFIG;
+        }
+
+        $decoded = json_decode($storage->read($filePath), true);
+        if (!is_array($decoded)) {
+            return self::DEFAULT_CONFIG;
+        }
+
+        return array_merge(self::DEFAULT_CONFIG, array_intersect_key($decoded, self::DEFAULT_CONFIG));
     }
 
 	/**
@@ -89,10 +127,18 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 		$form = $this->initConfigurationForm();
 		if ($form->checkInput())
 		{
-	
-			// @todo: implement saving to db
+            $config = [
+                'scormer_base_url' => rtrim((string) $form->getInput("scormer_base_url"), "/"),
+                'scormer_preview_api_key' => (string) $form->getInput("scormer_preview_api_key"),
+                'scormer_editor_api_key' => (string) $form->getInput("scormer_editor_api_key"),
+            ];
+
+            $storage->put(
+                $filePath,
+                json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+            );
 			
-			ilUtil::sendSuccess($pl->txt("saving_invoked"), true);
+			$tpl->setOnScreenMessage("success", $pl->txt("saving_invoked"), true);
 			$ilCtrl->redirect($this, "configure");
 		}
 		else
