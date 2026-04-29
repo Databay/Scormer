@@ -68,6 +68,11 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 		return $form;
 	}
 	
+    private function getProjectDataPath(): string
+    {
+        return 'Scormer/Scormer_config.json';
+    }
+
 	/**
 	 * Save form input (currently does not save anything to db)
 	 *
@@ -75,6 +80,9 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 	public function save()
 	{
 		global $tpl, $lng, $ilCtrl;
+        global $DIC;
+        $storage = $DIC->filesystem()->storage();
+        $filePath = $this->getProjectDataPath();
 	
 		$pl = $this->getPluginObject();
 		

@@ -31,7 +31,6 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     protected $listTarget = "";
     protected $apiTarget = "";
     protected $indexTarget = "";
-    protected $dataDir = "";
     /**
      * Initialisation
      */
@@ -255,16 +254,40 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $DIC->ctrl()->redirect($this, "showSuccess");
     }
 
+    private function getProjectDataPath(): string
+    {
+        return 'Scormer/Scormer_' . $this->object->getRefId() . '.json';
+    }
+
+    private function getOrCreateProjectData(): array
+    {
+        global $DIC;
+        $storage = $DIC->filesystem()->storage();
+        $filePath = $this->getProjectDataPath();
+
+        if ($storage->has($filePath)) {
+            $decoded = json_decode($storage->read($filePath), true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        $data = ['uuid' => $this->uuidv4()];
+        $storage->put($filePath, json_encode($data, JSON_PRETTY_PRINT));
+        return $data;
+    }
+
     private function getProjectUuid(): string
     {
-        $dataDir = ilFileUtils::getDataDir() . '/Scormer';
-        $fn = $dataDir . '/Scormer_' . $this->object->getRefId() . '.json';
+        global $DIC;
+        $storage = $DIC->filesystem()->storage();
+        $filePath = $this->getProjectDataPath();
 
-        if (!file_exists($fn)) {
+        if (!$storage->has($filePath)) {
             return '';
         }
 
-        $data = json_decode(file_get_contents($fn), true);
+        $data = json_decode($storage->read($filePath), true);
         return $data['uuid'] ?? '';
     }
 
@@ -565,21 +588,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
 
         $ilTabs->activateTab("showContent");
 
-        $this->dataDir = ilFileUtils::getDataDir() . '/Scormer';
-        if (!file_exists($this->dataDir)) {
-            ilFileUtils::makeDirParents($this->dataDir);
-        }
-
-        $fn = $this->dataDir . '/Scormer_' . $this->object->getRefId() . '.json';
-        $data = "";
-        if (file_exists($fn)) {
-            $data = json_decode(file_get_contents($fn), true);
-        }
-        if ($data === "") {
-            $data = [];
-            $data["uuid"] = $this->uuidv4();
-            file_put_contents($fn, json_encode($data, JSON_PRETTY_PRINT));
-        }
+        $data = $this->getOrCreateProjectData();
 
         // Rolle: 'editor' für Vollzugriff, 'preview' für reine Vorschau
         $role = 'preview';
@@ -617,21 +626,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
 
         $ilTabs->activateTab("showEdit");
 
-        $this->dataDir = ilFileUtils::getDataDir() . '/Scormer';
-        if (!file_exists($this->dataDir)) {
-            ilFileUtils::makeDirParents($this->dataDir);
-        }
-
-        $fn = $this->dataDir . '/Scormer_' . $this->object->getRefId() . '.json';
-        $data = "";
-        if (file_exists($fn)) {
-            $data = json_decode(file_get_contents($fn), true);
-        }
-        if ($data === "") {
-            $data = [];
-            $data["uuid"] = $this->uuidv4();
-            file_put_contents($fn, json_encode($data, JSON_PRETTY_PRINT));
-        }
+        $data = $this->getOrCreateProjectData();
 
         // Rolle: 'editor' für Vollzugriff, 'preview' für reine Vorschau
         $role = 'editor';
