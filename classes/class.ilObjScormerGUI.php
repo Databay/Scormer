@@ -75,6 +75,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
             case "targetSelect":
             case "saveTarget":
             case "cancelTarget":
+            case "showSuccess":
                 $this->checkPermission("write");
                 $this->$cmd();
                 break;
@@ -199,7 +200,6 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         }
 
         $buildResult = $this->requestScormBuild($projectUuid);
-        mail("ay@databay.de", "the buildResult", json_encode($buildResult, JSON_PRETTY_PRINT));
         if ($buildResult === null) {
             $DIC->ui()->mainTemplate()->setOnScreenMessage(
                 "failure",
@@ -251,12 +251,8 @@ class ilObjScormerGUI extends ilObjectPluginGUI
             return;
         }
 
-        $DIC->ui()->mainTemplate()->setOnScreenMessage(
-            "success",
-            "SCORM-Lernmodul \"" . $newObj->getTitle() . "\" wurde erfolgreich angelegt.",
-            true
-        );
-        $DIC->ctrl()->redirect($this, "showEdit");
+        $DIC->ctrl()->setParameter($this, 'new_ref_id', $newObj->getRefId());
+        $DIC->ctrl()->redirect($this, "showSuccess");
     }
 
     private function getProjectUuid(): string
@@ -383,6 +379,38 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     {
         global $DIC;
         $DIC->ctrl()->redirect($this, "showEdit");
+    }
+
+    function showSuccess(): void
+    {
+        global $DIC;
+
+        $ilTabs = $DIC->tabs();
+        $ilTabs->activateTab("showEdit");
+
+        $newRefId = (int) ($_GET["new_ref_id"] ?? 0);
+
+        if ($newRefId <= 0) {
+            $DIC->ctrl()->redirect($this, "showEdit");
+            return;
+        }
+
+        $objId = ilObject::_lookupObjId($newRefId);
+        $title = ilObject::_lookupTitle($objId);
+
+        $settingsLink = ilLink::_getStaticLink($newRefId, 'sahs');
+        $editorLink = $DIC->ctrl()->getLinkTarget($this, "showEdit");
+
+        $html = '<div style="margin: 20px; padding: 30px; background: #f0f9f0; border: 1px solid #4caf50; border-radius: 8px;">'
+            . '<h3 style="color: #2e7d32; margin-top: 0;">SCORM-Lernmodul erfolgreich angelegt</h3>'
+            . '<p>Das SCORM-Lernmodul <strong>&bdquo;' . htmlspecialchars($title) . '&ldquo;</strong> wurde erfolgreich erstellt.</p>'
+            . '<p style="margin-top: 20px;">'
+            . '<a href="' . $settingsLink . '" class="btn btn-default btn-primary" style="margin-right: 10px;">Einstellungen des Lernmoduls &ouml;ffnen</a>'
+            . '<a href="' . $editorLink . '" class="btn btn-default">Zur&uuml;ck zum Editor</a>'
+            . '</p>'
+            . '</div>';
+
+        $DIC->ui()->mainTemplate()->setContent($html);
     }
 
     function myOutput(): void
