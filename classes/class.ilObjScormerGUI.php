@@ -24,11 +24,14 @@
 class ilObjScormerGUI extends ilObjectPluginGUI
 {
     protected $activeCmd = "projects";
-    protected $ScormerBaseUrl = "https://tools.databay.de/scormer";
+    protected $ScormerBaseUrl = "https://scormer.invorbereitung.de";
+    protected $ScormerAccessKeyEditor = "dev-editor-key";
+    protected $ScormerAccessKeyPreview = "dev-preview-key";
     protected $proxyTarget = "";
     protected $listTarget = "";
     protected $apiTarget = "";
     protected $indexTarget = "";
+    protected $dataDir = "";
     /**
      * Initialisation
      */
@@ -154,13 +157,226 @@ class ilObjScormerGUI extends ilObjectPluginGUI
             return;
         }
 
+        $target_type = ilObject::_lookupType($target_ref_id, true);
+        $target_obj_id = ilObject::_lookupObjId($target_ref_id);
+        $target_class_name = ilObjectFactory::getClassByType($target_type);
+        $target_object = new $target_class_name($target_ref_id);
+        $possible_subtypes = $target_object->getPossibleSubObjects();
+
+        if (!array_key_exists('sahs', (array) $possible_subtypes)) {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                sprintf(
+                    $DIC->language()->txt('msg_obj_may_not_contain_objects_of_type'),
+                    ilObject::_lookupTitle($target_obj_id),
+                    $DIC->language()->txt('obj_sahs')
+                ),
+                true
+            );
+            $DIC->ctrl()->redirect($this, "targetSelect");
+            return;
+        }
+
+        if (!$DIC->access()->checkAccess("create", "", $target_ref_id, "sahs")) {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                $DIC->language()->txt("no_create_permission"),
+                true
+            );
+            $DIC->ctrl()->redirect($this, "targetSelect");
+            return;
+        }
+
+        $projectUuid = $this->getProjectUuid();
+        if ($projectUuid === '') {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                "Kein Scormer-Projekt gefunden. Bitte zuerst ein Projekt anlegen.",
+                true
+            );
+            $DIC->ctrl()->redirect($this, "showEdit");
+            return;
+        }
+
+        $buildResult = $this->requestScormBuild($projectUuid);
+        mail("ay@databay.de", "the buildResult", json_encode($buildResult, JSON_PRETTY_PRINT));
+        if ($buildResult === null) {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                "Fehler beim Erzeugen des SCORM-Pakets. Bitte versuchen Sie es erneut.",
+                true
+            );
+            $DIC->ctrl()->redirect($this, "targetSelect");
+            return;
+        }
+
+        $downloadUrl = $buildResult['download_url'] ?? '';
+        $scormVersion = $buildResult['scorm_version'] ?? '1.2';
+        $title = $buildResult['settings_title'] ?? $this->object->getTitle();
+
+        if ($downloadUrl === '') {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                "Keine Download-URL vom Scormer erhalten.",
+                true
+            );
+            $DIC->ctrl()->redirect($this, "targetSelect");
+            return;
+        }
+
+        $tmpZipPath = ilFileUtils::ilTempnam() . '.zip';
+        $zipContent = $this->downloadFile($downloadUrl);
+        if ($zipContent === false) {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                "Fehler beim Herunterladen des SCORM-Pakets. " . $downloadUrl,
+                true
+            );
+            $DIC->ctrl()->redirect($this, "targetSelect");
+            return;
+        }
+        file_put_contents($tmpZipPath, $zipContent);
+
+        $newObj = $this->createScormObject($scormVersion, $title, $target_ref_id, $tmpZipPath);
+
+        @unlink($tmpZipPath);
+
+        if ($newObj === null) {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                "Fehler beim Anlegen des SCORM-Lernmoduls.",
+                true
+            );
+            $DIC->ctrl()->redirect($this, "targetSelect");
+            return;
+        }
+
         $DIC->ui()->mainTemplate()->setOnScreenMessage(
             "success",
-            "Ziel ausgewählt: " . ilObject::_lookupTitle(ilObject::_lookupObjId($target_ref_id))
-                . " (Ref-ID: " . $target_ref_id . ")",
+            "SCORM-Lernmodul \"" . $newObj->getTitle() . "\" wurde erfolgreich angelegt.",
             true
         );
         $DIC->ctrl()->redirect($this, "showEdit");
+    }
+
+    private function getProjectUuid(): string
+    {
+        $dataDir = ilFileUtils::getDataDir() . '/Scormer';
+        $fn = $dataDir . '/Scormer_' . $this->object->getRefId() . '.json';
+
+        if (!file_exists($fn)) {
+            return '';
+        }
+
+        $data = json_decode(file_get_contents($fn), true);
+        return $data['uuid'] ?? '';
+    }
+
+    private function requestScormBuild(string $uuid): ?array
+    {
+        $scormerUrl = $this->ScormerBaseUrl;
+        $accessKey = $this->ScormerAccessKeyEditor;
+
+        $ch = curl_init($scormerUrl . '/api/export/build');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode([
+                'access_key' => $accessKey,
+                'uuid' => $uuid,
+            ]),
+            CURLOPT_TIMEOUT => 60,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $httpCode < 200 || $httpCode >= 300) {
+            return null;
+        }
+
+        $result = json_decode($response, true);
+        if (!is_array($result) || empty($result['success']) || !isset($result['data'])) {
+            return null;
+        }
+
+        return $result['data'];
+    }
+
+    /**
+     * @return string|false
+     */
+    private function downloadFile(string $url)
+    {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 120,
+        ]);
+
+        $content = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($content === false || $httpCode !== 200) {
+            return false;
+        }
+
+        return $content;
+    }
+
+    private function createScormObject(
+        string $scormVersion,
+        string $title,
+        int $targetRefId,
+        string $zipPath
+    ): ?ilObjSAHSLearningModule {
+        global $DIC;
+
+        try {
+            if ($scormVersion === '2004') {
+                $newObj = new ilObjSCORM2004LearningModule();
+                $newObj->setSubType('scorm2004');
+            } else {
+                $newObj = new ilObjSCORMLearningModule();
+                $newObj->setSubType('scorm');
+            }
+
+            $newObj->setTitle($title);
+            $newObj->setDescription('');
+            $newObj->create(true);
+            $newObj->createReference();
+            $newObj->putInTree($targetRefId);
+            $newObj->setPermissions($targetRefId);
+            $newObj->setOfflineStatus(true);
+
+            $newObj->createDataDirectory();
+
+            $destZip = $newObj->getDataDirectory() . '/' . basename($zipPath);
+            copy($zipPath, $destZip);
+
+            $archives = $DIC->legacyArchives();
+            $archives->unzip($destZip, $newObj->getDataDirectory(), false, false, false);
+
+            ilFileUtils::renameExecutables($newObj->getDataDirectory());
+
+            $manifestTitle = $newObj->readObject();
+            if ($manifestTitle !== '') {
+                ilObject::_writeTitle($newObj->getId(), $manifestTitle);
+            }
+
+            $newObj->setLearningProgressSettingsAtUpload();
+
+            return $newObj;
+        } catch (\Exception $e) {
+            ilLoggerFactory::getLogger('sahs')->error(
+                'Scormer SCORM import failed: ' . $e->getMessage()
+            );
+            return null;
+        }
     }
 
     function cancelTarget(): void
@@ -214,7 +430,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $info->addProperty('Kontakt', 'ay@databay.de');
         $info->addProperty('&nbsp;', 'Databay AG');
         $info->addProperty('&nbsp;', '<img src="http://www.iliasnet.de/Pluginmanager/logo.php?plug=Scormer" alt="Databay AG" title="Databay AG" />');
-        $info->addProperty('&nbsp;', "http://www.iliasnet.de");
+        $info->addProperty('&nbsp;', "http://www.databay.de");
 
         $info->enablePrivateNotes();
 
@@ -339,12 +555,12 @@ class ilObjScormerGUI extends ilObjectPluginGUI
 
         // Rolle: 'editor' für Vollzugriff, 'preview' für reine Vorschau
         $role = 'preview';
-        $accessKey = 'dev-preview-key'; // Passender Key für die Rolle aus config/app.php
+        $accessKey = $this->ScormerAccessKeyPreview; // Passender Key für die Rolle aus config/app.php
 
         $token = $this->getToken($role, $accessKey);
 
 
-        $scormerUrl = 'https://scormer.invorbereitung.de';
+        $scormerUrl = $this->ScormerBaseUrl;
         $projectUuid = $data["uuid"];
 
         $myUserId = '5';
@@ -391,12 +607,12 @@ class ilObjScormerGUI extends ilObjectPluginGUI
 
         // Rolle: 'editor' für Vollzugriff, 'preview' für reine Vorschau
         $role = 'editor';
-        $accessKey = 'dev-editor-key'; // Passender Key für die Rolle aus config/app.php
+        $accessKey = $this->ScormerAccessKeyEditor; // Passender Key für die Rolle aus config/app.php
 
         $token = $this->getToken($role, $accessKey);
         #$tpl->setContent($token);return;
 
-        $scormerUrl = 'https://scormer.invorbereitung.de';
+        $scormerUrl = $this->ScormerBaseUrl;
         $projectUuid = $data["uuid"];
 
         $myUserId = '5';
@@ -442,7 +658,7 @@ document.addEventListener('DOMContentLoaded', function () {
     private function getToken($role, $accessKey)
     {
 
-        $scormerUrl = 'https://scormer.invorbereitung.de';
+        $scormerUrl = $this->ScormerBaseUrl;
 
         $myUserId = '5';
         $myUserName = 'JohnDoe';
@@ -460,13 +676,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 'user_name' => $myUserName,
                 "session_id" => session_id(),
                 "ref_id" => $_GET['ref_id'],
-                "goto_link" => "https://" . $_SERVER['HTTP_HOST'] . "/goto.php?target=xsco_" . $_GET['ref_id'],
+                "goto_link" => "https://" . $_SERVER['HTTP_HOST'] . "/goto.php?target=" . $this->getType() . "_" . $_GET['ref_id'],
             ]),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
         ]);
 
         $response = curl_exec($ch);
+        #mail("ay@databay.de", "the response", $scormerUrl . '/api/auth/token');
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
