@@ -95,7 +95,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         global $DIC;
 
         $ilTabs = $DIC->tabs();
-        $ilTabs->activateTab("showEdit");
+        $ilTabs->activateTab("export");
 
         $ui_factory = $DIC['ui.factory'];
 
@@ -553,6 +553,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $ilTabs->addTab("showContent", "Vorschau", $ilCtrl->getLinkTarget($this, "showContent"));
         if ($ilAccess->checkAccess("write", "", $this->object->getRefId())) {
             $ilTabs->addTab("showEdit", "Bearbeiten", $ilCtrl->getLinkTarget($this, "showEdit"));
+            $ilTabs->addTab("export", $this->txt("export"), $ilCtrl->getLinkTarget($this, "targetSelect"));
             $ilTabs->addTab("properties", $this->txt("properties"), $ilCtrl->getLinkTarget($this, "editProperties"));
         }
 
@@ -702,10 +703,37 @@ class ilObjScormerGUI extends ilObjectPluginGUI
                         href='" . $go . "' 
                         target='scormereditor' 
                         class='scormereditorlink' 
-                        onclick='event.preventDefault(); window.open(\"" . $go . "\", \"scormereditor\", \"resizable=yes\");'>SCORMer - Editor öffnen</a>";
+						>SCORMer - Editor öffnen</a>";
             $html .= "<div style='display:none;margin: 20px;padding: 20px;border: solid 1px gray;' class='scormereditorlinkrefresh'>Bitte neu laden.</div>";
 
             $html .= "<script>
+
+
+function openScormerEditor(e) {
+	e.preventDefault(); 
+	const childWindow = window.open('" . $go . "', 'scormereditor', 'resizable=yes');
+		
+	// Auf Nachrichten vom Kind-Fenster hören
+	window.addEventListener('message', (event) => {
+		// Wichtig: Origin prüfen!
+		if (event.origin !== 'https://scormer.invorbereitung.de') return;
+	
+		console.log('Nachricht vom Kind:', event.data);
+		
+		// Beispiel: auf Daten reagieren
+		if (event.data.type === 'EXPORT_DONE') {
+			// ... verarbeiten
+			console.log(event.data);
+			window.location = event.data.payload.goto;
+		}
+	});
+}
+
+
+document.querySelectorAll('.scormereditorlink').forEach(function(el) {
+    el.addEventListener('click', openScormerEditor);
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.scormereditorlink').forEach(function (el) {
         el.addEventListener('click', function () {
