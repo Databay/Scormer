@@ -551,9 +551,8 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         global $ilTabs, $ilCtrl, $ilAccess;
 
         $ilTabs->addTab("showContent", "Vorschau", $ilCtrl->getLinkTarget($this, "showContent"));
-        $ilTabs->addTab("showEdit", "Bearbeiten", $ilCtrl->getLinkTarget($this, "showEdit"));
-
         if ($ilAccess->checkAccess("write", "", $this->object->getRefId())) {
+            $ilTabs->addTab("showEdit", "Bearbeiten", $ilCtrl->getLinkTarget($this, "showEdit"));
             $ilTabs->addTab("properties", $this->txt("properties"), $ilCtrl->getLinkTarget($this, "editProperties"));
         }
 
@@ -645,11 +644,11 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $role = 'preview';
         $accessKey = $this->ScormerAccessKeyPreview; // Passender Key für die Rolle aus config/app.php
 
-        $token = $this->getToken($role, $accessKey);
 
 
         $scormerUrl = $this->ScormerBaseUrl;
         $projectUuid = $data["uuid"];
+        $token = $this->getToken($role, $accessKey, $projectUuid);
 
         $myUserId = '5';
         $myUserName = 'JohnDoe';
@@ -683,11 +682,11 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $role = 'editor';
         $accessKey = $this->ScormerAccessKeyEditor; // Passender Key für die Rolle aus config/app.php
 
-        $token = $this->getToken($role, $accessKey);
         #$tpl->setContent($token);return;
 
         $scormerUrl = $this->ScormerBaseUrl;
         $projectUuid = $data["uuid"];
+        $token = $this->getToken($role, $accessKey, $projectUuid);
 
         $myUserId = '5';
         $myUserName = 'JohnDoe';
@@ -729,7 +728,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $tpl->setContent($html);
     }
 
-    private function getToken($role, $accessKey)
+    private function getToken($role, $accessKey, $projectUuid)
     {
 
         $scormerUrl = $this->ScormerBaseUrl;
@@ -748,6 +747,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'role' => $role,
                 'user_id' => $myUserId,
                 'user_name' => $myUserName,
+                'project_uuid' => $projectUuid,
                 "session_id" => session_id(),
                 "ref_id" => $_GET['ref_id'],
                 "goto_link" => "https://" . $_SERVER['HTTP_HOST'] . "/goto.php?target=" . $this->getType() . "_" . $_GET['ref_id'],
@@ -757,7 +757,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ]);
 
         $response = curl_exec($ch);
-        #mail("ay@databay.de", "the response", $scormerUrl . '/api/auth/token');
+        #mail("ay@databay.de", "the response", print_r($response, 1));
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
