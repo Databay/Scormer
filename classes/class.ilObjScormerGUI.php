@@ -27,12 +27,26 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         'scormer_base_url' => 'https://scormer.invorbereitung.de',
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
+        'ai_provider' => 'databay',
+        'ai_endpoint_url' => 'https://api.openai.com/v1',
+        'ai_api_key' => '',
+        'ai_model' => '',
+        'ai_image_endpoint_url' => '',
+        'ai_image_api_key' => '',
+        'ai_image_model' => '',
     ];
 
     protected $activeCmd = "projects";
     protected $ScormerBaseUrl = "https://scormer.invorbereitung.de";
     protected $ScormerAccessKeyEditor = "";
     protected $ScormerAccessKeyPreview = "";
+    protected $AiProvider = "databay";
+    protected $AiEndpointUrl = "https://api.openai.com/v1";
+    protected $AiApiKey = "";
+    protected $AiModel = "";
+    protected $AiImageEndpointUrl = "";
+    protected $AiImageApiKey = "";
+    protected $AiImageModel = "";
     protected $proxyTarget = "";
     protected $listTarget = "";
     protected $apiTarget = "";
@@ -308,6 +322,17 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $this->ScormerBaseUrl = rtrim((string) $config['scormer_base_url'], '/');
         $this->ScormerAccessKeyPreview = (string) $config['scormer_preview_api_key'];
         $this->ScormerAccessKeyEditor = (string) $config['scormer_editor_api_key'];
+
+        $aiProvider = (string) $config['ai_provider'];
+        $this->AiProvider = in_array($aiProvider, ['databay', 'openai'], true)
+            ? $aiProvider
+            : self::DEFAULT_SCORMER_CONFIG['ai_provider'];
+        $this->AiEndpointUrl = rtrim((string) $config['ai_endpoint_url'], '/');
+        $this->AiApiKey = (string) $config['ai_api_key'];
+        $this->AiModel = (string) $config['ai_model'];
+        $this->AiImageEndpointUrl = rtrim((string) $config['ai_image_endpoint_url'], '/');
+        $this->AiImageApiKey = (string) $config['ai_image_api_key'];
+        $this->AiImageModel = (string) $config['ai_image_model'];
     }
 
     private function getOrCreateProjectData(): array
@@ -756,30 +781,51 @@ document.addEventListener('DOMContentLoaded', function () {
         $tpl->setContent($html);
     }
 
+    private function getAiFieldsForToken(): array
+    {
+        if ($this->AiProvider !== 'openai') {
+            return [
+                'ai_provider' => 'default',
+            ];
+        }
+
+        return [
+            'ai_provider' => 'openai',
+            'ai_endpoint_url' => $this->AiEndpointUrl,
+            'ai_api_key' => $this->AiApiKey,
+            'ai_model' => $this->AiModel,
+            'ai_image_endpoint_url' => $this->AiImageEndpointUrl,
+            'ai_image_api_key' => $this->AiImageApiKey,
+            'ai_image_model' => $this->AiImageModel,
+        ];
+    }
+
     private function getToken($role, $accessKey, $projectUuid)
     {
 
+        global $DIC;
+
         $scormerUrl = $this->ScormerBaseUrl;
+        $ilUser = $DIC->user();
 
-        $myUserId = '5';
-        $myUserName = 'JohnDoe';
-
+        $postFields = array_merge([
+            'access_key' => $accessKey,
+            'role' => $role,
+            'user_id' => (string) $ilUser->getId(),
+            'user_name' => $ilUser->getLogin(),
+            'project_uuid' => $projectUuid,
+            'session_id' => session_id(),
+            'ref_id' => $_GET['ref_id'],
+            'title' => $this->object->getTitle(),
+            'goto_link' => 'https://' . $_SERVER['HTTP_HOST'] . '/goto.php?target=' . $this->getType() . '_' . $_GET['ref_id'],
+        ], $this->getAiFieldsForToken());
 
         // --- Token vom Scormer anfordern ---
         $ch = curl_init($scormerUrl . '/api/auth/token');
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => json_encode([
-                'access_key' => $accessKey,
-                'role' => $role,
-                'user_id' => $myUserId,
-                'user_name' => $myUserName,
-                'project_uuid' => $projectUuid,
-                "session_id" => session_id(),
-                "ref_id" => $_GET['ref_id'],
-                "goto_link" => "https://" . $_SERVER['HTTP_HOST'] . "/goto.php?target=" . $this->getType() . "_" . $_GET['ref_id'],
-            ]),
+            CURLOPT_POSTFIELDS => json_encode($postFields),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
         ]);

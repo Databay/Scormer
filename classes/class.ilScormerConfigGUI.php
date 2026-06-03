@@ -17,6 +17,13 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         'scormer_base_url' => 'https://scormer.invorbereitung.de',
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
+        'ai_provider' => 'databay',
+        'ai_endpoint_url' => 'https://api.openai.com/v1',
+        'ai_api_key' => '',
+        'ai_model' => '',
+        'ai_image_endpoint_url' => '',
+        'ai_image_api_key' => '',
+        'ai_image_model' => '',
     ];
 
 	/**
@@ -77,6 +84,42 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         $editorApiKey = new ilTextInputGUI($pl->txt("scormer_editor_api_key"), "scormer_editor_api_key");
         $form->addItem($editorApiKey);
 
+        $aiSection = new ilFormSectionHeaderGUI();
+        $aiSection->setTitle($pl->txt("ai_section_header"));
+        $form->addItem($aiSection);
+
+        $aiProvider = new ilRadioGroupInputGUI($pl->txt("ai_provider"), "ai_provider");
+
+        $optDatabay = new ilRadioOption($pl->txt("ai_provider_databay"), "databay");
+        $aiProvider->addOption($optDatabay);
+
+        $optOpenai = new ilRadioOption($pl->txt("ai_provider_openai"), "openai");
+
+        $aiEndpointUrl = new ilTextInputGUI($pl->txt("ai_endpoint_url"), "ai_endpoint_url");
+        $optOpenai->addSubItem($aiEndpointUrl);
+
+        $aiApiKey = new ilTextInputGUI($pl->txt("ai_api_key"), "ai_api_key");
+        $optOpenai->addSubItem($aiApiKey);
+
+        $aiModel = new ilTextInputGUI($pl->txt("ai_model"), "ai_model");
+        $optOpenai->addSubItem($aiModel);
+
+        $aiImageSection = new ilFormSectionHeaderGUI();
+        $aiImageSection->setTitle($pl->txt("ai_image_section"));
+        $optOpenai->addSubItem($aiImageSection);
+
+        $aiImageEndpointUrl = new ilTextInputGUI($pl->txt("ai_image_endpoint_url"), "ai_image_endpoint_url");
+        $optOpenai->addSubItem($aiImageEndpointUrl);
+
+        $aiImageApiKey = new ilTextInputGUI($pl->txt("ai_image_api_key"), "ai_image_api_key");
+        $optOpenai->addSubItem($aiImageApiKey);
+
+        $aiImageModel = new ilTextInputGUI($pl->txt("ai_image_model"), "ai_image_model");
+        $optOpenai->addSubItem($aiImageModel);
+
+        $aiProvider->addOption($optOpenai);
+        $form->addItem($aiProvider);
+
 		$form->addCommandButton("save", $lng->txt("save"));
 	                
 		$form->setTitle($pl->txt("Scormer_plugin_configuration"));
@@ -127,10 +170,29 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 		$form = $this->initConfigurationForm();
 		if ($form->checkInput())
 		{
+            $existing = $this->readConfiguration();
+            $aiProvider = (string) $form->getInput("ai_provider");
+            if (!in_array($aiProvider, ["databay", "openai"], true)) {
+                $aiProvider = self::DEFAULT_CONFIG["ai_provider"];
+            }
+
             $config = [
                 'scormer_base_url' => rtrim((string) $form->getInput("scormer_base_url"), "/"),
                 'scormer_preview_api_key' => (string) $form->getInput("scormer_preview_api_key"),
                 'scormer_editor_api_key' => (string) $form->getInput("scormer_editor_api_key"),
+                'ai_provider' => $aiProvider,
+                'ai_endpoint_url' => rtrim(
+                    $this->getAiConfigValue($form, "ai_endpoint_url", $existing, $aiProvider),
+                    "/"
+                ),
+                'ai_api_key' => $this->getAiConfigValue($form, "ai_api_key", $existing, $aiProvider),
+                'ai_model' => $this->getAiConfigValue($form, "ai_model", $existing, $aiProvider),
+                'ai_image_endpoint_url' => rtrim(
+                    $this->getAiConfigValue($form, "ai_image_endpoint_url", $existing, $aiProvider),
+                    "/"
+                ),
+                'ai_image_api_key' => $this->getAiConfigValue($form, "ai_image_api_key", $existing, $aiProvider),
+                'ai_image_model' => $this->getAiConfigValue($form, "ai_image_model", $existing, $aiProvider),
             ];
 
             $storage->put(
@@ -147,6 +209,29 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 			$tpl->setContent($form->getHtml());
 		}
 	}
+
+    /**
+     * Reads AI field from form; when Databay is active, hidden OpenAI sub-fields
+     * may be absent from POST — then existing JSON values are preserved.
+     */
+    private function getAiConfigValue(
+        ilPropertyFormGUI $form,
+        string $key,
+        array $existing,
+        string $provider
+    ): string {
+        $input = $form->getInput($key);
+
+        if ($provider === "databay" && ($input === null || $input === false)) {
+            return (string) ($existing[$key] ?? self::DEFAULT_CONFIG[$key] ?? "");
+        }
+
+        if ($input === null || $input === false) {
+            return (string) ($existing[$key] ?? self::DEFAULT_CONFIG[$key] ?? "");
+        }
+
+        return (string) $input;
+    }
 
 }
 ?>

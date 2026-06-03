@@ -41,6 +41,17 @@ saving_invoked#:#saved
 scormer_base_url#:#Scormer backend URL
 scormer_preview_api_key#:#API key for preview
 scormer_editor_api_key#:#API key for editing
+ai_section_header#:#AI usage
+ai_provider#:#AI provider
+ai_provider_databay#:#Databay internal AI
+ai_provider_openai#:#OpenAI-compatible endpoint
+ai_endpoint_url#:#Endpoint URL
+ai_api_key#:#API key
+ai_model#:#Model
+ai_image_section#:#Image generation
+ai_image_endpoint_url#:#Endpoint URL (image generation)
+ai_image_api_key#:#API key (image generation)
+ai_image_model#:#Model (image generation)
 Scormer_speichern#:#save Scormer
 Kein_Objekt_aktiv#:#no active object
 neuer_Knotenpunkt#:#new node
