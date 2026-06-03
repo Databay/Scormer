@@ -72,9 +72,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     function performCommand(string $cmd): void
     {
-        global $ilCtrl;
-
-        $this->apiTarget = $ilCtrl->getLinkTarget($this, "api");
+        $this->apiTarget = $this->ctrl->getLinkTarget($this, "api");
 
         $this->activeCmd = $cmd;
         switch ($cmd) {
@@ -514,10 +512,9 @@ class ilObjScormerGUI extends ilObjectPluginGUI
 
     function myOutput(): void
     {
-        global $tpl, $ilTabs;
-        $ilTabs->activateTab("showContent"); // optional
+        $this->tabs->activateTab("showContent"); // optional
         $html = "<h2>Hallo aus dem Deeplink</h2>";
-        $tpl->setContent($html);
+        $this->tpl->setContent($html);
     }
 
     /**
@@ -541,13 +538,10 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     function infoScreen(): void
     {
-        global $ilAccess, $ilUser, $lng, $ilCtrl, $tpl, $ilTabs;
-
-        $ilTabs->setTabActive("info_short");
+        $this->tabs->setTabActive("info_short");
 
         $this->checkPermission("visible");
 
-        include_once("./Services/InfoScreen/classes/class.ilInfoScreenGUI.php");
         $info = new ilInfoScreenGUI($this);
 
         $info->addSection($this->txt("plugininfo"));
@@ -561,11 +555,11 @@ class ilObjScormerGUI extends ilObjectPluginGUI
 
         $info->enablePrivateNotes();
 
-        $lng->loadLanguageModule("meta");
+        $this->lng->loadLanguageModule("meta");
 
         $this->addInfoItems($info);
 
-        $ret = $ilCtrl->forwardCommand($info);
+        $this->ctrl->forwardCommand($info);
     }
 
     /**
@@ -573,13 +567,11 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     function setTabs(): void
     {
-        global $ilTabs, $ilCtrl, $ilAccess;
-
-        $ilTabs->addTab("showContent", "Vorschau", $ilCtrl->getLinkTarget($this, "showContent"));
-        if ($ilAccess->checkAccess("write", "", $this->object->getRefId())) {
-            $ilTabs->addTab("showEdit", "Bearbeiten", $ilCtrl->getLinkTarget($this, "showEdit"));
-            $ilTabs->addTab("export", $this->txt("export"), $ilCtrl->getLinkTarget($this, "targetSelect"));
-            $ilTabs->addTab("properties", $this->txt("properties"), $ilCtrl->getLinkTarget($this, "editProperties"));
+        $this->tabs->addTab("showContent", "Vorschau", $this->ctrl->getLinkTarget($this, "showContent"));
+        if ($this->access->checkAccess("write", "", $this->object->getRefId())) {
+            $this->tabs->addTab("showEdit", "Bearbeiten", $this->ctrl->getLinkTarget($this, "showEdit"));
+            $this->tabs->addTab("export", $this->txt("export"), $this->ctrl->getLinkTarget($this, "targetSelect"));
+            $this->tabs->addTab("properties", $this->txt("properties"), $this->ctrl->getLinkTarget($this, "editProperties"));
         }
 
         $this->addPermissionTab();
@@ -591,12 +583,10 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     function editProperties()
     {
-        global $tpl, $ilTabs;
-
-        $ilTabs->activateTab("properties");
+        $this->tabs->activateTab("properties");
         $this->initPropertiesForm();
         $this->getPropertiesValues();
-        $tpl->setContent($this->form->getHTML());
+        $this->tpl->setContent($this->form->getHTML());
     }
 
     /**
@@ -606,9 +596,6 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     public function initPropertiesForm()
     {
-        global $ilCtrl;
-
-        include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
         $this->form = new ilPropertyFormGUI();
 
         $ti = new ilTextInputGUI($this->txt("title"), "title");
@@ -621,7 +608,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $this->form->addCommandButton("updateProperties", $this->txt("save"));
 
         $this->form->setTitle($this->txt("edit_properties"));
-        $this->form->setFormAction($ilCtrl->getFormAction($this));
+        $this->form->setFormAction($this->ctrl->getFormAction($this));
     }
 
     /**
@@ -639,19 +626,17 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     public function updateProperties()
     {
-        global $tpl, $lng, $ilCtrl;
-
         $this->initPropertiesForm();
         if ($this->form->checkInput()) {
             $this->object->setTitle($this->form->getInput("title"));
             $this->object->setDescription($this->form->getInput("desc"));
             $this->object->update();
-            $tpl->setOnScreenMessage("success", $lng->txt("msg_obj_modified"), true);
-            $ilCtrl->redirect($this, "editProperties");
+            $this->tpl->setOnScreenMessage("success", $this->lng->txt("msg_obj_modified"), true);
+            $this->ctrl->redirect($this, "editProperties");
         }
 
         $this->form->setValuesByPost();
-        $tpl->setContent($this->form->getHtml());
+        $this->tpl->setContent($this->form->getHtml());
     }
 
 
@@ -660,9 +645,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     function showContent()
     {
-        global $tpl, $ilTabs;
-
-        $ilTabs->activateTab("showContent");
+        $this->tabs->activateTab("showContent");
 
         $data = $this->getOrCreateProjectData();
 
@@ -690,7 +673,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
             $html = "<iframe src='" . $go . "' style='width: 100%;height: 700px;'></iframe>";
         }
 
-        $tpl->setContent($html);
+        $this->tpl->setContent($html);
     }
 
     /**
@@ -698,9 +681,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
      */
     function showEdit()
     {
-        global $tpl, $ilTabs;
-
-        $ilTabs->activateTab("showEdit");
+        $this->tabs->activateTab("showEdit");
 
         $data = $this->getOrCreateProjectData();
 
@@ -778,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>";
         }
 
-        $tpl->setContent($html);
+        $this->tpl->setContent($html);
     }
 
     private function getAiFieldsForToken(): array

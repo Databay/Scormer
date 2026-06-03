@@ -61,8 +61,6 @@ class ilObjScormerListGUI extends ilObjectPluginListGUI
 	*/
 	function getProperties(): array
 	{
-		global $lng, $ilUser;
-
 		$props = array();
 		
 		#$this->plugin->includeClass("class.ilObjScormerAccess.php");

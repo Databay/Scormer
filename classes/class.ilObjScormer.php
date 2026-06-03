@@ -1,7 +1,5 @@
 <?php
 
-include_once("./Services/Repository/PluginSlot/class.ilObjectPlugin.php");
-
 /**
 * Application class for Scormer repository object.
 *
@@ -41,7 +39,6 @@ class ilObjScormer extends ilObjectPlugin
 	*/
 	function doCreate(bool $clone_mode = false): void
 	{
-		global $ilDB;
 		// $myID = $this->getId();
 
 	}
@@ -53,7 +50,6 @@ class ilObjScormer extends ilObjectPlugin
 	*/
 	function doRead(): void
 	{
-		global $ilDB;
 		// $myID = $this->getId();
 
 	}
@@ -64,7 +60,6 @@ class ilObjScormer extends ilObjectPlugin
 	*/
 	function doUpdate(): void
 	{
-		global $ilDB;
 		// $myID = $this->getId();
 
 	}
@@ -76,7 +71,6 @@ class ilObjScormer extends ilObjectPlugin
 	*/
 	function doDelete(): void
 	{
-		global $ilDB;
 		// $myID = $this->getId();
 		
 	}
@@ -87,8 +81,6 @@ class ilObjScormer extends ilObjectPlugin
 	*/
 	function doClone($a_target_id,$a_copy_id,$new_obj)
 	{
-		global $ilDB;
-
 	}
 	
 

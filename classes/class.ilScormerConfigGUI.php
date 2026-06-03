@@ -47,10 +47,10 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 	 */
 	function configure()
 	{
-		global $tpl;
+		global $DIC;
 
 		$form = $this->initConfigurationForm();
-		$tpl->setContent($form->getHTML());
+		$DIC['tpl']->setContent($form->getHTML());
 	}
 	
 	//
@@ -65,11 +65,10 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 	 */
 	public function initConfigurationForm()
 	{
-		global $lng, $ilCtrl;
-		
+		global $DIC;
+
 		$pl = $this->getPluginObject();
 	
-		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI();
 
         $config = $this->readConfiguration();
@@ -120,10 +119,10 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         $aiProvider->addOption($optOpenai);
         $form->addItem($aiProvider);
 
-		$form->addCommandButton("save", $lng->txt("save"));
+		$form->addCommandButton("save", $DIC->language()->txt("save"));
 	                
 		$form->setTitle($pl->txt("Scormer_plugin_configuration"));
-		$form->setFormAction($ilCtrl->getFormAction($this));
+		$form->setFormAction($DIC->ctrl()->getFormAction($this));
 
         $form->setValuesByArray($config);
 
@@ -138,7 +137,6 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
     private function readConfiguration(): array
     {
         global $DIC;
-
         $storage = $DIC->filesystem()->storage();
         $filePath = $this->getProjectDataPath();
 
@@ -160,7 +158,6 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 	 */
 	public function save()
 	{
-		global $tpl, $lng, $ilCtrl;
         global $DIC;
         $storage = $DIC->filesystem()->storage();
         $filePath = $this->getProjectDataPath();
@@ -200,13 +197,13 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
                 json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
             );
 			
-			$tpl->setOnScreenMessage("success", $pl->txt("saving_invoked"), true);
-			$ilCtrl->redirect($this, "configure");
+			$DIC['tpl']->setOnScreenMessage("success", $pl->txt("saving_invoked"), true);
+			$DIC->ctrl()->redirect($this, "configure");
 		}
 		else
 		{
 			$form->setValuesByPost();
-			$tpl->setContent($form->getHtml());
+			$DIC['tpl']->setContent($form->getHtml());
 		}
 	}
 

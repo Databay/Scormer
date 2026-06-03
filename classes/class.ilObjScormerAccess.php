@@ -31,17 +31,17 @@ class ilObjScormerAccess extends ilObjectPluginAccess
 	*/
 	function _checkAccess(string $cmd, string $permission, int $ref_id, int $obj_id, ?int $user_id = null): bool
 	{
-		global $ilUser, $ilAccess;
+		global $DIC;
 
 		if (!isset($user_id) || $user_id == "")
 		{
-			$user_id = $ilUser->getId();
+			$user_id = $DIC->user()->getId();
 		}
 
 		switch ($permission)
 		{
 			case "read":
-				if (!$ilAccess->checkAccessOfUser($user_id, "write", "", $ref_id))
+				if (!$DIC->access()->checkAccessOfUser($user_id, "write", "", $ref_id))
 				{
 					#return false;
 				}
