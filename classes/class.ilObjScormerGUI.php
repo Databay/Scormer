@@ -28,7 +28,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
         'ai_provider' => 'databay',
-        'ai_endpoint_url' => 'https://api.openai.com/v1',
+        'ai_endpoint_url' => 'https://api.openai.com/v1/chat/completions',
         'ai_api_key' => '',
         'ai_model' => '',
         'ai_image_endpoint_url' => '',
@@ -41,7 +41,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     protected $ScormerAccessKeyEditor = "";
     protected $ScormerAccessKeyPreview = "";
     protected $AiProvider = "databay";
-    protected $AiEndpointUrl = "https://api.openai.com/v1";
+    protected $AiEndpointUrl = "https://api.openai.com/v1/chat/completions";
     protected $AiApiKey = "";
     protected $AiModel = "";
     protected $AiImageEndpointUrl = "";

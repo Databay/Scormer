@@ -18,7 +18,7 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
         'ai_provider' => 'databay',
-        'ai_endpoint_url' => 'https://api.openai.com/v1',
+        'ai_endpoint_url' => 'https://api.openai.com/v1/chat/completions',
         'ai_api_key' => '',
         'ai_model' => '',
         'ai_image_endpoint_url' => '',
