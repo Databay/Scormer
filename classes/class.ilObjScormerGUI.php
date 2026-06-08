@@ -513,8 +513,9 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     function myOutput(): void
     {
         $this->tabs->activateTab("showContent"); // optional
-        $html = "<h2>Hallo aus dem Deeplink</h2>";
-        $this->tpl->setContent($html);
+        #$html = "<h2>Hallo aus dem Deeplink</h2>";
+        #$this->tpl->setContent($html);
+	$this->showContent();
     }
 
     /**
