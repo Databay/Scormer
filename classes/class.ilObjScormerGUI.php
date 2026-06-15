@@ -24,7 +24,7 @@
 class ilObjScormerGUI extends ilObjectPluginGUI
 {
     private const DEFAULT_SCORMER_CONFIG = [
-        'scormer_base_url' => 'https://scormer.invorbereitung.de',
+        'scormer_base_url' => 'https://scormer.ilianet.de',
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
         'ai_provider' => 'databay',
@@ -37,7 +37,7 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     ];
 
     protected $activeCmd = "projects";
-    protected $ScormerBaseUrl = "https://scormer.invorbereitung.de";
+    protected $ScormerBaseUrl = "https://scormer.iliasnet.de";
     protected $ScormerAccessKeyEditor = "";
     protected $ScormerAccessKeyPreview = "";
     protected $AiProvider = "databay";
@@ -722,8 +722,9 @@ function openScormerEditor(e) {
 		
 	// Auf Nachrichten vom Kind-Fenster hören
 	window.addEventListener('message', (event) => {
+		console.log(event);
 		// Wichtig: Origin prüfen!
-		if (event.origin !== 'https://scormer.invorbereitung.de') return;
+		if (event.origin !== 'https://scormer.iliasnet.de' && event.origin !== 'https://scormer.invorbereitung.de') return;
 	
 		console.log('Nachricht vom Kind:', event.data);
 		
