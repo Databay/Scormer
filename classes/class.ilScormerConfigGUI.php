@@ -14,7 +14,7 @@
 class ilScormerConfigGUI extends ilPluginConfigGUI
 {
     private const DEFAULT_CONFIG = [
-        'scormer_base_url' => 'https://scormer.invorbereitung.de',
+        'scormer_base_url' => 'https://scormer.iliasnet.de',
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
         'ai_provider' => 'databay',
