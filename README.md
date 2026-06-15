@@ -8,7 +8,7 @@ ILIAS repository object plugin for integrating [Scormer](https://www.databay.de/
 | **Version** | 1.1.0 |
 | **ILIAS** | 9.0 – 10.x |
 | **Author** | [Databay AG](https://www.databay.de/) |
-| **License** | See [license.txt](license.txt) |
+| **License** | See [LICENSE](LICENSE) |
 
 ## Features
 
