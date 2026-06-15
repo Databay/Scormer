@@ -65,12 +65,13 @@ composer du
 
 Alternatively, download the repository as a ZIP archive, rename the extracted folder to `Scormer`, and place it in the path that matches your ILIAS version (see table above).
 
-### 2. Activate the plugin in ILIAS
+### 2. Install and activate the plugin in ILIAS
 
 1. Log in to ILIAS as an administrator
 2. Go to **Administration** → **Extending ILIAS** → **Plugins**
-3. Find **Scormer** and **activate** the plugin
-4. If needed, clear the ILIAS cache (**Administration** → **System Settings and Tools** → **Cache**)
+3. Find **Scormer** and click **Install**
+4. After installation completes, **activate** the plugin
+5. If needed, clear the ILIAS cache (**Administration** → **System Settings and Tools** → **Cache**)
 
 ### 3. Set up permissions
 
