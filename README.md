@@ -13,7 +13,7 @@ ILIAS repository object plugin for integrating [Scormer](https://www.databay.de/
 ## Features
 
 - Create and manage **Scormer objects** in the ILIAS repository
-- **AI support** via Databay-hosted AI or an OpenAI-compatible endpoint
+- **AI support** via Databay-hosted AI or OpenAI-compatible endpoints — text and image generation can be configured independently
 - **Preview** and **editing** through the embedded Scormer interface
 - **SCORM export** as an ILIAS SCORM learning module (SCORM 1.2 or 2004) into a course or folder
 
@@ -86,8 +86,10 @@ After activation, plugin settings are available under **Administration** → **E
 | **Scormer backend URL** | Base URL of your Scormer instance (required), e.g. `https://scormer.iliasnet.de` |
 | **API key for preview** | Key for read/preview access |
 | **API key for editing** | Key for write/editor access |
-| **AI provider** | `Databay-hosted AI` or `OpenAI-compatible endpoint` |
-| **Endpoint URL / API key / model** | Only for OpenAI-compatible providers: settings for text and image generation |
+| **AI provider (text)** | `Databay-hosted AI` or `OpenAI-compatible endpoint` for slide/text generation |
+| **AI provider (image)** | `Databay-hosted AI` or `OpenAI-compatible endpoint` for image generation |
+| **Endpoint URL / API key / model** | Text settings — only when text provider is OpenAI-compatible |
+| **Image endpoint / API key / model** | Image settings — only when image provider is OpenAI-compatible |
 
 Configuration is stored in `Scormer/Scormer_config.json` in the ILIAS file storage.
 

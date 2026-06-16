@@ -27,7 +27,8 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         'scormer_base_url' => 'https://scormer.ilianet.de',
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
-        'ai_provider' => 'databay',
+        'ai_text_provider' => 'databay',
+        'ai_image_provider' => 'databay',
         'ai_endpoint_url' => 'https://api.openai.com/v1/chat/completions',
         'ai_api_key' => '',
         'ai_model' => '',
@@ -40,7 +41,8 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     protected $ScormerBaseUrl = "https://scormer.iliasnet.de";
     protected $ScormerAccessKeyEditor = "";
     protected $ScormerAccessKeyPreview = "";
-    protected $AiProvider = "databay";
+    protected $AiTextProvider = "databay";
+    protected $AiImageProvider = "databay";
     protected $AiEndpointUrl = "https://api.openai.com/v1/chat/completions";
     protected $AiApiKey = "";
     protected $AiModel = "";
@@ -310,6 +312,22 @@ class ilObjScormerGUI extends ilObjectPluginGUI
             $config['scormer_base_url'] = self::DEFAULT_SCORMER_CONFIG['scormer_base_url'];
         }
 
+        return $this->migrateLegacyAiProvider($config, $decoded);
+    }
+
+    /**
+     * Maps legacy ai_provider to separate text/image providers.
+     */
+    private function migrateLegacyAiProvider(array $config, array $decoded): array
+    {
+        if (!isset($decoded['ai_text_provider']) && isset($decoded['ai_provider'])) {
+            $legacy = (string) $decoded['ai_provider'];
+            if (in_array($legacy, ['databay', 'openai'], true)) {
+                $config['ai_text_provider'] = $legacy;
+                $config['ai_image_provider'] = $legacy;
+            }
+        }
+
         return $config;
     }
 
@@ -321,10 +339,15 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $this->ScormerAccessKeyPreview = (string) $config['scormer_preview_api_key'];
         $this->ScormerAccessKeyEditor = (string) $config['scormer_editor_api_key'];
 
-        $aiProvider = (string) $config['ai_provider'];
-        $this->AiProvider = in_array($aiProvider, ['databay', 'openai'], true)
-            ? $aiProvider
-            : self::DEFAULT_SCORMER_CONFIG['ai_provider'];
+        $aiTextProvider = (string) $config['ai_text_provider'];
+        $this->AiTextProvider = in_array($aiTextProvider, ['databay', 'openai'], true)
+            ? $aiTextProvider
+            : self::DEFAULT_SCORMER_CONFIG['ai_text_provider'];
+
+        $aiImageProvider = (string) $config['ai_image_provider'];
+        $this->AiImageProvider = in_array($aiImageProvider, ['databay', 'openai'], true)
+            ? $aiImageProvider
+            : self::DEFAULT_SCORMER_CONFIG['ai_image_provider'];
         $this->AiEndpointUrl = rtrim((string) $config['ai_endpoint_url'], '/');
         $this->AiApiKey = (string) $config['ai_api_key'];
         $this->AiModel = (string) $config['ai_model'];
@@ -766,21 +789,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     private function getAiFieldsForToken(): array
     {
-        if ($this->AiProvider !== 'openai') {
-            return [
-                'ai_provider' => 'default',
-            ];
+        $fields = [
+            'ai_provider' => $this->AiTextProvider === 'openai' ? 'openai' : 'default',
+            'ai_image_provider' => $this->AiImageProvider === 'openai' ? 'openai' : 'default',
+        ];
+
+        if ($this->AiTextProvider === 'openai') {
+            $fields['ai_endpoint_url'] = $this->AiEndpointUrl;
+            $fields['ai_api_key'] = $this->AiApiKey;
+            $fields['ai_model'] = $this->AiModel;
         }
 
-        return [
-            'ai_provider' => 'openai',
-            'ai_endpoint_url' => $this->AiEndpointUrl,
-            'ai_api_key' => $this->AiApiKey,
-            'ai_model' => $this->AiModel,
-            'ai_image_endpoint_url' => $this->AiImageEndpointUrl,
-            'ai_image_api_key' => $this->AiImageApiKey,
-            'ai_image_model' => $this->AiImageModel,
-        ];
+        if ($this->AiImageProvider === 'openai') {
+            $fields['ai_image_endpoint_url'] = $this->AiImageEndpointUrl;
+            $fields['ai_image_api_key'] = $this->AiImageApiKey;
+            $fields['ai_image_model'] = $this->AiImageModel;
+        }
+
+        return $fields;
     }
 
     private function getToken($role, $accessKey, $projectUuid)

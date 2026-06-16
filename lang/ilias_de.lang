@@ -42,6 +42,9 @@ scormer_base_url#:#Scormer-Backend-URL
 scormer_preview_api_key#:#API-Key für Vorschau
 scormer_editor_api_key#:#API-Key für Bearbeiten
 ai_section_header#:#KI-Nutzung
+ai_text_section_header#:#Text-/Slide-Generierung
+ai_text_provider#:#KI-Anbieter (Text)
+ai_image_provider#:#KI-Anbieter (Bild)
 ai_provider#:#KI-Anbieter
 ai_provider_databay#:#Databay-interne KI
 ai_provider_openai#:#OpenAI-kompatibler Endpunkt

@@ -17,7 +17,8 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         'scormer_base_url' => 'https://scormer.iliasnet.de',
         'scormer_preview_api_key' => '',
         'scormer_editor_api_key' => '',
-        'ai_provider' => 'databay',
+        'ai_text_provider' => 'databay',
+        'ai_image_provider' => 'databay',
         'ai_endpoint_url' => 'https://api.openai.com/v1/chat/completions',
         'ai_api_key' => '',
         'ai_model' => '',
@@ -83,41 +84,51 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         $editorApiKey = new ilTextInputGUI($pl->txt("scormer_editor_api_key"), "scormer_editor_api_key");
         $form->addItem($editorApiKey);
 
-        $aiSection = new ilFormSectionHeaderGUI();
-        $aiSection->setTitle($pl->txt("ai_section_header"));
-        $form->addItem($aiSection);
+        $aiTextSection = new ilFormSectionHeaderGUI();
+        $aiTextSection->setTitle($pl->txt("ai_text_section_header"));
+        $form->addItem($aiTextSection);
 
-        $aiProvider = new ilRadioGroupInputGUI($pl->txt("ai_provider"), "ai_provider");
+        $aiTextProvider = new ilRadioGroupInputGUI($pl->txt("ai_text_provider"), "ai_text_provider");
 
-        $optDatabay = new ilRadioOption($pl->txt("ai_provider_databay"), "databay");
-        $aiProvider->addOption($optDatabay);
+        $optTextDatabay = new ilRadioOption($pl->txt("ai_provider_databay"), "databay");
+        $aiTextProvider->addOption($optTextDatabay);
 
-        $optOpenai = new ilRadioOption($pl->txt("ai_provider_openai"), "openai");
+        $optTextOpenai = new ilRadioOption($pl->txt("ai_provider_openai"), "openai");
 
         $aiEndpointUrl = new ilTextInputGUI($pl->txt("ai_endpoint_url"), "ai_endpoint_url");
-        $optOpenai->addSubItem($aiEndpointUrl);
+        $optTextOpenai->addSubItem($aiEndpointUrl);
 
         $aiApiKey = new ilTextInputGUI($pl->txt("ai_api_key"), "ai_api_key");
-        $optOpenai->addSubItem($aiApiKey);
+        $optTextOpenai->addSubItem($aiApiKey);
 
         $aiModel = new ilTextInputGUI($pl->txt("ai_model"), "ai_model");
-        $optOpenai->addSubItem($aiModel);
+        $optTextOpenai->addSubItem($aiModel);
+
+        $aiTextProvider->addOption($optTextOpenai);
+        $form->addItem($aiTextProvider);
 
         $aiImageSection = new ilFormSectionHeaderGUI();
         $aiImageSection->setTitle($pl->txt("ai_image_section"));
-        $optOpenai->addSubItem($aiImageSection);
+        $form->addItem($aiImageSection);
+
+        $aiImageProvider = new ilRadioGroupInputGUI($pl->txt("ai_image_provider"), "ai_image_provider");
+
+        $optImageDatabay = new ilRadioOption($pl->txt("ai_provider_databay"), "databay");
+        $aiImageProvider->addOption($optImageDatabay);
+
+        $optImageOpenai = new ilRadioOption($pl->txt("ai_provider_openai"), "openai");
 
         $aiImageEndpointUrl = new ilTextInputGUI($pl->txt("ai_image_endpoint_url"), "ai_image_endpoint_url");
-        $optOpenai->addSubItem($aiImageEndpointUrl);
+        $optImageOpenai->addSubItem($aiImageEndpointUrl);
 
         $aiImageApiKey = new ilTextInputGUI($pl->txt("ai_image_api_key"), "ai_image_api_key");
-        $optOpenai->addSubItem($aiImageApiKey);
+        $optImageOpenai->addSubItem($aiImageApiKey);
 
         $aiImageModel = new ilTextInputGUI($pl->txt("ai_image_model"), "ai_image_model");
-        $optOpenai->addSubItem($aiImageModel);
+        $optImageOpenai->addSubItem($aiImageModel);
 
-        $aiProvider->addOption($optOpenai);
-        $form->addItem($aiProvider);
+        $aiImageProvider->addOption($optImageOpenai);
+        $form->addItem($aiImageProvider);
 
 		$form->addCommandButton("save", $DIC->language()->txt("save"));
 	                
@@ -149,7 +160,37 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
             return self::DEFAULT_CONFIG;
         }
 
-        return array_merge(self::DEFAULT_CONFIG, array_intersect_key($decoded, self::DEFAULT_CONFIG));
+        $config = array_merge(
+            self::DEFAULT_CONFIG,
+            array_intersect_key($decoded, self::DEFAULT_CONFIG)
+        );
+
+        return $this->migrateLegacyAiProvider($config, $decoded);
+    }
+
+    /**
+     * Maps legacy ai_provider to separate text/image providers.
+     */
+    private function migrateLegacyAiProvider(array $config, array $decoded): array
+    {
+        if (!isset($decoded['ai_text_provider']) && isset($decoded['ai_provider'])) {
+            $legacy = (string) $decoded['ai_provider'];
+            if (in_array($legacy, ['databay', 'openai'], true)) {
+                $config['ai_text_provider'] = $legacy;
+                $config['ai_image_provider'] = $legacy;
+            }
+        }
+
+        return $config;
+    }
+
+    private function normalizeAiProvider(string $provider, string $defaultKey): string
+    {
+        if (!in_array($provider, ['databay', 'openai'], true)) {
+            return self::DEFAULT_CONFIG[$defaultKey];
+        }
+
+        return $provider;
     }
 
 	/**
@@ -168,28 +209,33 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 		if ($form->checkInput())
 		{
             $existing = $this->readConfiguration();
-            $aiProvider = (string) $form->getInput("ai_provider");
-            if (!in_array($aiProvider, ["databay", "openai"], true)) {
-                $aiProvider = self::DEFAULT_CONFIG["ai_provider"];
-            }
+            $aiTextProvider = $this->normalizeAiProvider(
+                (string) $form->getInput("ai_text_provider"),
+                'ai_text_provider'
+            );
+            $aiImageProvider = $this->normalizeAiProvider(
+                (string) $form->getInput("ai_image_provider"),
+                'ai_image_provider'
+            );
 
             $config = [
                 'scormer_base_url' => rtrim((string) $form->getInput("scormer_base_url"), "/"),
                 'scormer_preview_api_key' => (string) $form->getInput("scormer_preview_api_key"),
                 'scormer_editor_api_key' => (string) $form->getInput("scormer_editor_api_key"),
-                'ai_provider' => $aiProvider,
+                'ai_text_provider' => $aiTextProvider,
+                'ai_image_provider' => $aiImageProvider,
                 'ai_endpoint_url' => rtrim(
-                    $this->getAiConfigValue($form, "ai_endpoint_url", $existing, $aiProvider),
+                    $this->getAiConfigValue($form, "ai_endpoint_url", $existing, $aiTextProvider),
                     "/"
                 ),
-                'ai_api_key' => $this->getAiConfigValue($form, "ai_api_key", $existing, $aiProvider),
-                'ai_model' => $this->getAiConfigValue($form, "ai_model", $existing, $aiProvider),
+                'ai_api_key' => $this->getAiConfigValue($form, "ai_api_key", $existing, $aiTextProvider),
+                'ai_model' => $this->getAiConfigValue($form, "ai_model", $existing, $aiTextProvider),
                 'ai_image_endpoint_url' => rtrim(
-                    $this->getAiConfigValue($form, "ai_image_endpoint_url", $existing, $aiProvider),
+                    $this->getAiConfigValue($form, "ai_image_endpoint_url", $existing, $aiImageProvider),
                     "/"
                 ),
-                'ai_image_api_key' => $this->getAiConfigValue($form, "ai_image_api_key", $existing, $aiProvider),
-                'ai_image_model' => $this->getAiConfigValue($form, "ai_image_model", $existing, $aiProvider),
+                'ai_image_api_key' => $this->getAiConfigValue($form, "ai_image_api_key", $existing, $aiImageProvider),
+                'ai_image_model' => $this->getAiConfigValue($form, "ai_image_model", $existing, $aiImageProvider),
             ];
 
             $storage->put(
