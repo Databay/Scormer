@@ -125,7 +125,7 @@ Scormer/
 
 For questions about installation, licensing, or the Scormer backend, contact [Databay AG](https://www.databay.de/).
 
-**Contact:** Aresch Yavari — [ay@databay.de](mailto:ay@databay.de)
+**Contact:** [grafik@databay.de](mailto:grafik@databay.de)
 
 ## License
 
