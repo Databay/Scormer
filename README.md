@@ -25,8 +25,9 @@ ILIAS repository object plugin for integrating [Scormer](https://www.databay.de/
 - Optional: access to an **OpenAI-compatible API endpoint** for custom AI models (if you choose not to use Databay-hosted AI)
 
 
-To use the Databay-hosted Scormer backend and obtain the necessary API keys (preview and editor), contact the [Databay AG](https://www.databay.de/) graphics team at [grafik@databay.de](mailto:grafik@databay.de) . They will provide access to a Scormer instance and the corresponding keys for your ILIAS installation.
-
+To access the Databay-hosted Scormer backend and acquire the necessary API keys (preview and editor), please reach out to the Databay sales team at [grafik@databay.de](mailto:grafik@databay.de). 
+They can provide you with demo access to a Scormer instance and offer details about the plugin at [databay.de/scormer](https://databay.de/scormer). 
+Upon your decision to proceed, we can provide pricing information and assist in setting up the plugin on your installation, including granting you access to a Scormer instance along with the relevant keys.
 
 
 ## Installation
