@@ -25,7 +25,7 @@ ILIAS repository object plugin for integrating [Scormer](https://www.databay.de/
 - Optional: access to an **OpenAI-compatible API endpoint** for custom AI models (if you choose not to use Databay-hosted AI)
 
 
-To use the Databay-hosted Scormer backend and obtain the necessary API keys (preview and editor), contact the [Databay AG](https://www.databay.de/) sales team. They will provide access to a Scormer instance and the corresponding keys for your ILIAS installation.
+To use the Databay-hosted Scormer backend and obtain the necessary API keys (preview and editor), contact the [Databay AG](https://www.databay.de/) graphics team at [grafik@databay.de](mailto:grafik@databay.de) . They will provide access to a Scormer instance and the corresponding keys for your ILIAS installation.
 
 
 
@@ -81,15 +81,15 @@ Make sure the relevant roles are allowed to create and edit Scormer objects. Per
 
 After activation, plugin settings are available under **Administration** → **Extending ILIAS** → **Plugins** → **Scormer** → **Configure**.
 
-| Setting | Description |
-|---|---|
-| **Scormer backend URL** | Base URL of your Scormer instance (required), e.g. `https://scormer.iliasnet.de` |
-| **API key for preview** | Key for read/preview access |
-| **API key for editing** | Key for write/editor access |
-| **AI provider (text)** | `Databay-hosted AI` or `OpenAI-compatible endpoint` for slide/text generation |
-| **AI provider (image)** | `Databay-hosted AI` or `OpenAI-compatible endpoint` for image generation |
-| **Endpoint URL / API key / model** | Text settings — only when text provider is OpenAI-compatible |
-| **Image endpoint / API key / model** | Image settings — only when image provider is OpenAI-compatible |
+| Setting | Description                                                                                                                   |
+|---|-------------------------------------------------------------------------------------------------------------------------------|
+| **Scormer backend URL** | Base URL of your Scormer instance (required), e.g. `https://scormer.iliasnet.de`                                              |
+| **API key for preview** | Key for read/preview access                                                                                                   |
+| **API key for editing** | Key for write/editor access                                                                                                   |
+| **AI provider (text)** | `Databay-hosted AI` or `OpenAI-compatible endpoint` for slide/text generation e.g. `https://api.openai.com/v1/chat/completions` |
+| **AI provider (image)** | `Databay-hosted AI` or `OpenAI-compatible endpoint` for image generation e.g. `https://api.openai.com/v1/images/generations`    |
+| **Endpoint URL / API key / model** | Text settings — only when text provider is OpenAI-compatible e.g. `gpt-5.4-mini-2026-03-17`                                     |
+| **Image endpoint / API key / model** | Image settings — only when image provider is OpenAI-compatible e.g. `gpt-image-1-mini`                                                          |
 
 Configuration is stored in `Scormer/Scormer_config.json` in the ILIAS file storage.
 
