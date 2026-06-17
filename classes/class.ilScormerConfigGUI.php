@@ -51,7 +51,7 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 		global $DIC;
 
 		$form = $this->initConfigurationForm();
-		$DIC['tpl']->setContent($form->getHTML());
+		$DIC->ui()->mainTemplate()->setContent($form->getHTML());
 	}
 	
 	//
@@ -243,13 +243,13 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
                 json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
             );
 			
-			$DIC['tpl']->setOnScreenMessage("success", $pl->txt("saving_invoked"), true);
+			$DIC->ui()->mainTemplate()->setOnScreenMessage("success", $pl->txt("saving_invoked"), true);
 			$DIC->ctrl()->redirect($this, "configure");
 		}
 		else
 		{
 			$form->setValuesByPost();
-			$DIC['tpl']->setContent($form->getHtml());
+			$DIC->ui()->mainTemplate()->setContent($form->getHtml());
 		}
 	}
 

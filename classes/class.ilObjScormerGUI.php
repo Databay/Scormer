@@ -70,6 +70,22 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     }
 
     /**
+     * Resolves skin-aware image paths across ILIAS 9–11 without deprecated ilUtil on 10+.
+     */
+    private function getImagePath(string $image): string
+    {
+        if (defined('ILIAS_VERSION_NUM') && version_compare(ILIAS_VERSION_NUM, '10.0', '>=')) {
+            return './assets/images/' . $image;
+        }
+
+        if (class_exists('ilUtil')) {
+            return ilUtil::getImagePath($image);
+        }
+
+        return './assets/images/' . $image;
+    }
+
+    /**
      * Handles all commmands of this class, centralizes permission checks
      */
     function performCommand(string $cmd): void
@@ -155,10 +171,10 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $t->addComponent($cancel_btn);
 
         $t->setCloseFormTag(false);
-        $t->setLeadingImage(ilUtil::getImagePath("nav/arrow_upright.svg"), " ");
+        $t->setLeadingImage($this->getImagePath("nav/arrow_upright.svg"), " ");
         $output = $t->getHTML() . $output;
 
-        $t->setLeadingImage(ilUtil::getImagePath("nav/arrow_downright.svg"), " ");
+        $t->setLeadingImage($this->getImagePath("nav/arrow_downright.svg"), " ");
         $t->setCloseFormTag(true);
         $t->setOpenFormTag(false);
         $output .= "<br />" . $t->getHTML();

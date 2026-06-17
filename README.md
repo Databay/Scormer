@@ -5,8 +5,8 @@ ILIAS repository object plugin for integrating [Scormer](https://www.databay.de/
 | | |
 |---|---|
 | **Plugin ID** | `xsco` |
-| **Version** | 1.1.0 |
-| **ILIAS** | 9.0 – 10.x |
+| **Version** | 1.2.0 |
+| **ILIAS** | 9.0 – 11.x |
 | **Author** | [Databay AG](https://www.databay.de/) |
 | **License** | See [LICENSE](LICENSE) |
 
@@ -19,7 +19,7 @@ ILIAS repository object plugin for integrating [Scormer](https://www.databay.de/
 
 ## Requirements
 
-- A working **ILIAS installation** (version 9.0 through 10.x)
+- A working **ILIAS installation** (version 9.0 through 11.x)
 - A reachable **Scormer backend instance**
 - **API keys** for preview and editing — issued for your Scormer backend instance and required for plugin configuration
 - Optional: access to an **OpenAI-compatible API endpoint** for custom AI models (if you choose not to use Databay-hosted AI)
@@ -42,8 +42,11 @@ The path to the `Customizing` directory depends on your ILIAS version:
 |---|---|---|
 | **9.x** | `<ilias-root>/Customizing/` | `<ilias-root>/Customizing/global/plugins/Services/Repository/RepositoryObject/Scormer` |
 | **10.x** | `<ilias-root>/public/Customizing/` | `<ilias-root>/public/Customizing/global/plugins/Services/Repository/RepositoryObject/Scormer` |
+| **11.x** | `<ilias-root>/public/Customizing/` | `<ilias-root>/public/Customizing/plugins/Services/Repository/RepositoryObject/Scormer` |
 
 Starting with ILIAS 10, the web-accessible document root was moved into `public/`. Customizations that previously lived directly under the ILIAS root (including plugins) now belong under `public/Customizing/`. When upgrading from ILIAS 9 to 10, move your existing `Customizing` folder into `public/` and adjust plugin paths accordingly.
+
+Starting with ILIAS 11, the `global` segment was removed from the plugin path. When upgrading from ILIAS 10 to 11, move plugins from `public/Customizing/global/plugins/` to `public/Customizing/plugins/` (see [ILIAS 11 upgrade guide](https://github.com/ILIAS-eLearning/ILIAS/blob/release_11/docs/configuration/install.md)).
 
 #### ILIAS 9
 
@@ -60,6 +63,16 @@ git clone https://github.com/DatabayAG/Scormer.git Scormer
 cd /path/to/ilias
 mkdir -p public/Customizing/global/plugins/Services/Repository/RepositoryObject
 cd public/Customizing/global/plugins/Services/Repository/RepositoryObject
+git clone https://github.com/DatabayAG/Scormer.git Scormer
+composer du
+```
+
+#### ILIAS 11
+
+```bash
+cd /path/to/ilias
+mkdir -p public/Customizing/plugins/Services/Repository/RepositoryObject
+cd public/Customizing/plugins/Services/Repository/RepositoryObject
 git clone https://github.com/DatabayAG/Scormer.git Scormer
 composer du
 ```
@@ -121,6 +134,7 @@ Scormer/
 3. Optionally remove the plugin directory:
    - ILIAS 9: `Customizing/global/plugins/Services/Repository/RepositoryObject/Scormer`
    - ILIAS 10: `public/Customizing/global/plugins/Services/Repository/RepositoryObject/Scormer`
+   - ILIAS 11: `public/Customizing/plugins/Services/Repository/RepositoryObject/Scormer`
 
 ## Support
 
