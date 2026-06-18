@@ -37,6 +37,7 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 		{
 			case "configure":
 			case "save":
+			case "openConfig":
 				$this->$cmd();
 				break;
 
@@ -83,6 +84,25 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 
         $editorApiKey = new ilTextInputGUI($pl->txt("scormer_editor_api_key"), "scormer_editor_api_key");
         $form->addItem($editorApiKey);
+
+        $backendConfigSection = new ilFormSectionHeaderGUI();
+        $backendConfigSection->setTitle($pl->txt("scormer_backend_config_section"));
+        $form->addItem($backendConfigSection);
+
+        $backendConfigAction = new ilCustomInputGUI();
+        if (trim((string) $config['scormer_editor_api_key']) === '') {
+            $backendConfigAction->setHtml(
+                '<p class="ilFormInfo">' . $pl->txt("scormer_editor_api_key_required") . '</p>'
+            );
+        } else {
+            $openConfigLink = $DIC->ctrl()->getLinkTarget($this, "openConfig");
+            $backendConfigAction->setHtml(
+                '<a href="' . $openConfigLink . '" class="btn btn-default" target="_blank" rel="noopener noreferrer">'
+                . $pl->txt("scormer_open_config")
+                . '</a>'
+            );
+        }
+        $form->addItem($backendConfigAction);
 
         $aiTextSection = new ilFormSectionHeaderGUI();
         $aiTextSection->setTitle($pl->txt("ai_text_section_header"));
@@ -274,6 +294,107 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         }
 
         return (string) $input;
+    }
+
+    /**
+     * Opens the Scormer backend /config route in a new browser tab.
+     */
+    public function openConfig(): void
+    {
+        global $DIC;
+
+        $pl = $this->getPluginObject();
+        $config = $this->readConfiguration();
+
+        if (
+            trim((string) $config['scormer_base_url']) === ''
+            || trim((string) $config['scormer_editor_api_key']) === ''
+        ) {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                $pl->txt("scormer_editor_api_key_required"),
+                true
+            );
+            $DIC->ctrl()->redirect($this, "configure");
+        }
+
+        $token = $this->requestConfigToken($config);
+        if ($token === '') {
+            $DIC->ui()->mainTemplate()->setOnScreenMessage(
+                "failure",
+                $pl->txt("scormer_config_token_error"),
+                true
+            );
+            $DIC->ctrl()->redirect($this, "configure");
+        }
+
+        $url = rtrim((string) $config['scormer_base_url'], '/')
+            . '/config?token='
+            . urlencode($token);
+
+        ilUtil::redirect($url);
+    }
+
+    private function buildAiFieldsForToken(array $config): array
+    {
+        $aiTextProvider = (string) ($config['ai_text_provider'] ?? 'databay');
+        $aiImageProvider = (string) ($config['ai_image_provider'] ?? 'databay');
+
+        $fields = [
+            'ai_provider' => $aiTextProvider === 'openai' ? 'openai' : 'default',
+            'ai_image_provider' => $aiImageProvider === 'openai' ? 'openai' : 'default',
+        ];
+
+        if ($aiTextProvider === 'openai') {
+            $fields['ai_endpoint_url'] = rtrim((string) ($config['ai_endpoint_url'] ?? ''), '/');
+            $fields['ai_api_key'] = (string) ($config['ai_api_key'] ?? '');
+            $fields['ai_model'] = (string) ($config['ai_model'] ?? '');
+        }
+
+        if ($aiImageProvider === 'openai') {
+            $fields['ai_image_endpoint_url'] = rtrim((string) ($config['ai_image_endpoint_url'] ?? ''), '/');
+            $fields['ai_image_api_key'] = (string) ($config['ai_image_api_key'] ?? '');
+            $fields['ai_image_model'] = (string) ($config['ai_image_model'] ?? '');
+        }
+
+        return $fields;
+    }
+
+    private function requestConfigToken(array $config): string
+    {
+        global $DIC;
+
+        $scormerUrl = rtrim((string) $config['scormer_base_url'], '/');
+        $ilUser = $DIC->user();
+
+        $postFields = array_merge([
+            'access_key' => (string) $config['scormer_editor_api_key'],
+            'role' => 'editor',
+            'user_id' => (string) $ilUser->getId(),
+            'user_name' => $ilUser->getLogin(),
+            'session_id' => session_id(),
+        ], $this->buildAiFieldsForToken($config));
+
+        $ch = curl_init($scormerUrl . '/api/auth/token');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode($postFields),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 201 || $response === false) {
+            return '';
+        }
+
+        $result = json_decode($response, true);
+
+        return (string) ($result['data']['token'] ?? '');
     }
 
 }

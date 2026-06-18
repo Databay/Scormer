@@ -41,6 +41,10 @@ saving_invoked#:#saved
 scormer_base_url#:#Scormer backend URL
 scormer_preview_api_key#:#API key for preview
 scormer_editor_api_key#:#API key for editing
+scormer_backend_config_section#:#Scormer backend configuration
+scormer_open_config#:#Open Scormer configuration
+scormer_editor_api_key_required#:#Please set an API key for editing and save the settings first.
+scormer_config_token_error#:#Could not request token.
 ai_section_header#:#AI usage
 ai_text_section_header#:#Text/slide generation
 ai_text_provider#:#AI provider (text)
