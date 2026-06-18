@@ -1,7 +1,7 @@
 <?php
 
 #include_once("./Services/Component/classes/class.ilPluginConfigGUI.php");
- 
+
 /**
  * Scormer configuration user interface class
  *
@@ -27,51 +27,49 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         'ai_image_model' => '',
     ];
 
-	/**
-	* Handles all commmands, default is "configure"
-	*/
-	function performCommand(string $cmd): void
-	{
+    /**
+     * Handles all commmands, default is "configure"
+     */
+    function performCommand(string $cmd): void
+    {
 
-		switch ($cmd)
-		{
-			case "configure":
-			case "save":
-			case "openConfig":
-				$this->$cmd();
-				break;
+        switch ($cmd) {
+            case "configure":
+            case "save":
+            case "openConfig":
+                $this->$cmd();
+                break;
+        }
+    }
 
-		}
-	}
+    /**
+     * Configure screen
+     */
+    function configure()
+    {
+        global $DIC;
 
-	/**
-	 * Configure screen
-	 */
-	function configure()
-	{
-		global $DIC;
-
-		$form = $this->initConfigurationForm();
-		$DIC->ui()->mainTemplate()->setContent($form->getHTML());
-	}
+        $form = $this->initConfigurationForm();
+        $DIC->ui()->mainTemplate()->setContent($form->getHTML());
+    }
 	
 	//
 	// From here on, this is just an Scormer implementation using
 	// a standard form (without saving anything)
 	//
-	
-	/**
-	 * Init configuration form.
-	 *
-	 * @return object form object
-	 */
-	public function initConfigurationForm()
-	{
-		global $DIC;
 
-		$pl = $this->getPluginObject();
-	
-		$form = new ilPropertyFormGUI();
+    /**
+     * Init configuration form.
+     *
+     * @return object form object
+     */
+    public function initConfigurationForm()
+    {
+        global $DIC;
+
+        $pl = $this->getPluginObject();
+
+        $form = new ilPropertyFormGUI();
 
         $config = $this->readConfiguration();
 
@@ -97,9 +95,9 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         } else {
             $openConfigLink = $DIC->ctrl()->getLinkTarget($this, "openConfig");
             $backendConfigAction->setHtml(
-                '<a href="' . $openConfigLink . '" class="btn btn-default" target="_blank" rel="noopener noreferrer">'
-                . $pl->txt("scormer_open_config")
-                . '</a>'
+                '<a href="' . $openConfigLink . '" class="btn btn-default" target="scormerconfig" rel="noopener noreferrer">'
+                    . $pl->txt("scormer_open_config")
+                    . '</a>'
             );
         }
         $form->addItem($backendConfigAction);
@@ -150,16 +148,16 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         $aiImageProvider->addOption($optImageOpenai);
         $form->addItem($aiImageProvider);
 
-		$form->addCommandButton("save", $DIC->language()->txt("save"));
-	                
-		$form->setTitle($pl->txt("Scormer_plugin_configuration"));
-		$form->setFormAction($DIC->ctrl()->getFormAction($this));
+        $form->addCommandButton("save", $DIC->language()->txt("save"));
+
+        $form->setTitle($pl->txt("Scormer_plugin_configuration"));
+        $form->setFormAction($DIC->ctrl()->getFormAction($this));
 
         $form->setValuesByArray($config);
 
-		return $form;
-	}
-	
+        return $form;
+    }
+
     private function getProjectDataPath(): string
     {
         return 'Scormer/Scormer_config.json';
@@ -213,21 +211,20 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         return $provider;
     }
 
-	/**
-	 * Save form input (currently does not save anything to db)
-	 *
-	 */
-	public function save()
-	{
+    /**
+     * Save form input (currently does not save anything to db)
+     *
+     */
+    public function save()
+    {
         global $DIC;
         $storage = $DIC->filesystem()->storage();
         $filePath = $this->getProjectDataPath();
-	
-		$pl = $this->getPluginObject();
-		
-		$form = $this->initConfigurationForm();
-		if ($form->checkInput())
-		{
+
+        $pl = $this->getPluginObject();
+
+        $form = $this->initConfigurationForm();
+        if ($form->checkInput()) {
             $existing = $this->readConfiguration();
             $aiTextProvider = $this->normalizeAiProvider(
                 (string) $form->getInput("ai_text_provider"),
@@ -262,16 +259,14 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
                 $filePath,
                 json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
             );
-			
-			$DIC->ui()->mainTemplate()->setOnScreenMessage("success", $pl->txt("saving_invoked"), true);
-			$DIC->ctrl()->redirect($this, "configure");
-		}
-		else
-		{
-			$form->setValuesByPost();
-			$DIC->ui()->mainTemplate()->setContent($form->getHtml());
-		}
-	}
+
+            $DIC->ui()->mainTemplate()->setOnScreenMessage("success", $pl->txt("saving_invoked"), true);
+            $DIC->ctrl()->redirect($this, "configure");
+        } else {
+            $form->setValuesByPost();
+            $DIC->ui()->mainTemplate()->setContent($form->getHtml());
+        }
+    }
 
     /**
      * Reads AI field from form; when Databay is active, hidden OpenAI sub-fields
@@ -369,7 +364,7 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 
         $postFields = array_merge([
             'access_key' => (string) $config['scormer_editor_api_key'],
-            'role' => 'editor',
+            'role' => 'config',
             'user_id' => (string) $ilUser->getId(),
             'user_name' => $ilUser->getLogin(),
             'session_id' => session_id(),
@@ -396,6 +391,4 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
 
         return (string) ($result['data']['token'] ?? '');
     }
-
 }
-?>
