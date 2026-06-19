@@ -93,12 +93,28 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
                 '<p class="ilFormInfo">' . $pl->txt("scormer_editor_api_key_required") . '</p>'
             );
         } else {
-            $openConfigLink = $DIC->ctrl()->getLinkTarget($this, "openConfig");
-            $backendConfigAction->setHtml(
-                '<a href="' . $openConfigLink . '" class="btn btn-default" target="scormerconfig" rel="noopener noreferrer">'
-                    . $pl->txt("scormer_open_config")
-                    . '</a>'
-            );
+            $configUrl = $this->buildConfigUrl();
+            if ($configUrl === null) {
+                $backendConfigAction->setHtml(
+                    '<p class="ilFormInfo">' . $pl->txt("scormer_config_token_error") . '</p>'
+                );
+            } else {
+                $backendConfigAction->setHtml(
+                    '<p class="ilFormInfo">' . $pl->txt("scormer_config_design_defaults_info") . '</p>'
+                    . '<a href="' . htmlspecialchars($configUrl, ENT_QUOTES) . '" class="btn btn-default scormerconfiglink">'
+                        . $pl->txt("scormer_open_config")
+                        . '</a>'
+                        . '<script>
+function openScormerConfig(e) {
+    e.preventDefault();
+    window.open(' . json_encode($configUrl) . ", 'scormerconfig', 'resizable=yes');
+}
+document.querySelectorAll('.scormerconfiglink').forEach(function(el) {
+    el.addEventListener('click', openScormerConfig);
+});
+</script>"
+                );
+            }
         }
         $form->addItem($backendConfigAction);
 
@@ -292,42 +308,46 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
     }
 
     /**
-     * Opens the Scormer backend /config route in a new browser tab.
+     * Opens the Scormer backend /config route (direct navigation fallback).
      */
     public function openConfig(): void
     {
         global $DIC;
 
         $pl = $this->getPluginObject();
+        $url = $this->buildConfigUrl();
+
+        if ($url === null) {
+            $config = $this->readConfiguration();
+            $message = trim((string) $config['scormer_editor_api_key']) === ''
+                ? $pl->txt("scormer_editor_api_key_required")
+                : $pl->txt("scormer_config_token_error");
+            $DIC->ui()->mainTemplate()->setOnScreenMessage("failure", $message, true);
+            $DIC->ctrl()->redirect($this, "configure");
+        }
+
+        ilUtil::redirect($url);
+    }
+
+    private function buildConfigUrl(): ?string
+    {
         $config = $this->readConfiguration();
 
         if (
             trim((string) $config['scormer_base_url']) === ''
             || trim((string) $config['scormer_editor_api_key']) === ''
         ) {
-            $DIC->ui()->mainTemplate()->setOnScreenMessage(
-                "failure",
-                $pl->txt("scormer_editor_api_key_required"),
-                true
-            );
-            $DIC->ctrl()->redirect($this, "configure");
+            return null;
         }
 
         $token = $this->requestConfigToken($config);
         if ($token === '') {
-            $DIC->ui()->mainTemplate()->setOnScreenMessage(
-                "failure",
-                $pl->txt("scormer_config_token_error"),
-                true
-            );
-            $DIC->ctrl()->redirect($this, "configure");
+            return null;
         }
 
-        $url = rtrim((string) $config['scormer_base_url'], '/')
+        return rtrim((string) $config['scormer_base_url'], '/')
             . '/config?token='
             . urlencode($token);
-
-        ilUtil::redirect($url);
     }
 
     private function buildAiFieldsForToken(array $config): array

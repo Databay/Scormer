@@ -43,6 +43,7 @@ scormer_preview_api_key#:#API key for preview
 scormer_editor_api_key#:#API key for editing
 scormer_backend_config_section#:#Scormer backend configuration
 scormer_open_config#:#Open Scormer configuration
+scormer_config_design_defaults_info#:#The design settings configured here will be stored as default values for creating new SCORMer elements.
 scormer_editor_api_key_required#:#Please set an API key for editing and save the settings first.
 scormer_config_token_error#:#Could not request token.
 ai_section_header#:#AI usage
