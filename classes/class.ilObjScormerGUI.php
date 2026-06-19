@@ -35,6 +35,10 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         'ai_image_endpoint_url' => '',
         'ai_image_api_key' => '',
         'ai_image_model' => '',
+        'ai_audio_provider' => 'databay',
+        'ai_audio_endpoint_url' => 'https://api.elevenlabs.io/v1/text-to-speech/',
+        'ai_audio_api_key' => '',
+        'ai_audio_model' => 'eleven_multilingual_v2',
     ];
 
     protected $activeCmd = "projects";
@@ -49,6 +53,10 @@ class ilObjScormerGUI extends ilObjectPluginGUI
     protected $AiImageEndpointUrl = "";
     protected $AiImageApiKey = "";
     protected $AiImageModel = "";
+    protected $AiAudioProvider = "databay";
+    protected $AiAudioEndpointUrl = "https://api.elevenlabs.io/v1/text-to-speech/";
+    protected $AiAudioApiKey = "";
+    protected $AiAudioModel = "eleven_multilingual_v2";
     protected $proxyTarget = "";
     protected $listTarget = "";
     protected $apiTarget = "";
@@ -370,6 +378,14 @@ class ilObjScormerGUI extends ilObjectPluginGUI
         $this->AiImageEndpointUrl = rtrim((string) $config['ai_image_endpoint_url'], '/');
         $this->AiImageApiKey = (string) $config['ai_image_api_key'];
         $this->AiImageModel = (string) $config['ai_image_model'];
+
+        $aiAudioProvider = (string) $config['ai_audio_provider'];
+        $this->AiAudioProvider = in_array($aiAudioProvider, ['databay', 'elevenlabs'], true)
+            ? $aiAudioProvider
+            : self::DEFAULT_SCORMER_CONFIG['ai_audio_provider'];
+        $this->AiAudioEndpointUrl = rtrim((string) $config['ai_audio_endpoint_url'], '/') . '/';
+        $this->AiAudioApiKey = (string) $config['ai_audio_api_key'];
+        $this->AiAudioModel = (string) $config['ai_audio_model'];
     }
 
     private function getOrCreateProjectData(): array
@@ -808,6 +824,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $fields = [
             'ai_provider' => $this->AiTextProvider === 'openai' ? 'openai' : 'default',
             'ai_image_provider' => $this->AiImageProvider === 'openai' ? 'openai' : 'default',
+            'ai_audio_provider' => $this->AiAudioProvider === 'elevenlabs' ? 'elevenlabs' : 'default',
         ];
 
         if ($this->AiTextProvider === 'openai') {
@@ -820,6 +837,12 @@ document.addEventListener('DOMContentLoaded', function () {
             $fields['ai_image_endpoint_url'] = $this->AiImageEndpointUrl;
             $fields['ai_image_api_key'] = $this->AiImageApiKey;
             $fields['ai_image_model'] = $this->AiImageModel;
+        }
+
+        if ($this->AiAudioProvider === 'elevenlabs') {
+            $fields['ai_audio_endpoint_url'] = $this->AiAudioEndpointUrl;
+            $fields['ai_audio_api_key'] = $this->AiAudioApiKey;
+            $fields['ai_audio_model'] = $this->AiAudioModel;
         }
 
         return $fields;

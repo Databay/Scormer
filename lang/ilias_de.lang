@@ -60,6 +60,12 @@ ai_image_section#:#Bildgenerierung
 ai_image_endpoint_url#:#Endpunkt-URL (Bildgenerierung)
 ai_image_api_key#:#API-Key (Bildgenerierung)
 ai_image_model#:#Modell (Bildgenerierung)
+ai_audio_section#:#Audiogenerierung
+ai_audio_provider#:#KI-Anbieter (Audio)
+ai_provider_elevenlabs#:#ElevenLabs
+ai_audio_endpoint_url#:#Endpunkt-URL (Audiogenerierung)
+ai_audio_api_key#:#API-Key (Audiogenerierung)
+ai_audio_model#:#Modell (Audiogenerierung)
 Scormer_speichern#:#Scormer speichern
 Kein_Objekt_aktiv#:#Kein Objekt aktiv
 neuer_Knotenpunkt#:#neuer Knotenpunkt

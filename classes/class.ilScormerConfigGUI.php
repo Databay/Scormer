@@ -25,6 +25,10 @@ class ilScormerConfigGUI extends ilPluginConfigGUI
         'ai_image_endpoint_url' => '',
         'ai_image_api_key' => '',
         'ai_image_model' => '',
+        'ai_audio_provider' => 'databay',
+        'ai_audio_endpoint_url' => 'https://api.elevenlabs.io/v1/text-to-speech/',
+        'ai_audio_api_key' => '',
+        'ai_audio_model' => 'eleven_multilingual_v2',
     ];
 
     /**
@@ -164,6 +168,29 @@ document.querySelectorAll('.scormerconfiglink').forEach(function(el) {
         $aiImageProvider->addOption($optImageOpenai);
         $form->addItem($aiImageProvider);
 
+        $aiAudioSection = new ilFormSectionHeaderGUI();
+        $aiAudioSection->setTitle($pl->txt("ai_audio_section"));
+        $form->addItem($aiAudioSection);
+
+        $aiAudioProvider = new ilRadioGroupInputGUI($pl->txt("ai_audio_provider"), "ai_audio_provider");
+
+        $optAudioDatabay = new ilRadioOption($pl->txt("ai_provider_databay"), "databay");
+        $aiAudioProvider->addOption($optAudioDatabay);
+
+        $optAudioElevenlabs = new ilRadioOption($pl->txt("ai_provider_elevenlabs"), "elevenlabs");
+
+        $aiAudioEndpointUrl = new ilTextInputGUI($pl->txt("ai_audio_endpoint_url"), "ai_audio_endpoint_url");
+        $optAudioElevenlabs->addSubItem($aiAudioEndpointUrl);
+
+        $aiAudioApiKey = new ilTextInputGUI($pl->txt("ai_audio_api_key"), "ai_audio_api_key");
+        $optAudioElevenlabs->addSubItem($aiAudioApiKey);
+
+        $aiAudioModel = new ilTextInputGUI($pl->txt("ai_audio_model"), "ai_audio_model");
+        $optAudioElevenlabs->addSubItem($aiAudioModel);
+
+        $aiAudioProvider->addOption($optAudioElevenlabs);
+        $form->addItem($aiAudioProvider);
+
         $form->addCommandButton("save", $DIC->language()->txt("save"));
 
         $form->setTitle($pl->txt("Scormer_plugin_configuration"));
@@ -227,6 +254,15 @@ document.querySelectorAll('.scormerconfiglink').forEach(function(el) {
         return $provider;
     }
 
+    private function normalizeAiAudioProvider(string $provider): string
+    {
+        if (!in_array($provider, ['databay', 'elevenlabs'], true)) {
+            return self::DEFAULT_CONFIG['ai_audio_provider'];
+        }
+
+        return $provider;
+    }
+
     /**
      * Save form input (currently does not save anything to db)
      *
@@ -250,6 +286,9 @@ document.querySelectorAll('.scormerconfiglink').forEach(function(el) {
                 (string) $form->getInput("ai_image_provider"),
                 'ai_image_provider'
             );
+            $aiAudioProvider = $this->normalizeAiAudioProvider(
+                (string) $form->getInput("ai_audio_provider")
+            );
 
             $config = [
                 'scormer_base_url' => rtrim((string) $form->getInput("scormer_base_url"), "/"),
@@ -269,6 +308,13 @@ document.querySelectorAll('.scormerconfiglink').forEach(function(el) {
                 ),
                 'ai_image_api_key' => $this->getAiConfigValue($form, "ai_image_api_key", $existing, $aiImageProvider),
                 'ai_image_model' => $this->getAiConfigValue($form, "ai_image_model", $existing, $aiImageProvider),
+                'ai_audio_provider' => $aiAudioProvider,
+                'ai_audio_endpoint_url' => rtrim(
+                    $this->getAiConfigValue($form, "ai_audio_endpoint_url", $existing, $aiAudioProvider),
+                    "/"
+                ) . '/',
+                'ai_audio_api_key' => $this->getAiConfigValue($form, "ai_audio_api_key", $existing, $aiAudioProvider),
+                'ai_audio_model' => $this->getAiConfigValue($form, "ai_audio_model", $existing, $aiAudioProvider),
             ];
 
             $storage->put(
@@ -354,10 +400,12 @@ document.querySelectorAll('.scormerconfiglink').forEach(function(el) {
     {
         $aiTextProvider = (string) ($config['ai_text_provider'] ?? 'databay');
         $aiImageProvider = (string) ($config['ai_image_provider'] ?? 'databay');
+        $aiAudioProvider = (string) ($config['ai_audio_provider'] ?? 'databay');
 
         $fields = [
             'ai_provider' => $aiTextProvider === 'openai' ? 'openai' : 'default',
             'ai_image_provider' => $aiImageProvider === 'openai' ? 'openai' : 'default',
+            'ai_audio_provider' => $aiAudioProvider === 'elevenlabs' ? 'elevenlabs' : 'default',
         ];
 
         if ($aiTextProvider === 'openai') {
@@ -370,6 +418,12 @@ document.querySelectorAll('.scormerconfiglink').forEach(function(el) {
             $fields['ai_image_endpoint_url'] = rtrim((string) ($config['ai_image_endpoint_url'] ?? ''), '/');
             $fields['ai_image_api_key'] = (string) ($config['ai_image_api_key'] ?? '');
             $fields['ai_image_model'] = (string) ($config['ai_image_model'] ?? '');
+        }
+
+        if ($aiAudioProvider === 'elevenlabs') {
+            $fields['ai_audio_endpoint_url'] = rtrim((string) ($config['ai_audio_endpoint_url'] ?? ''), '/') . '/';
+            $fields['ai_audio_api_key'] = (string) ($config['ai_audio_api_key'] ?? '');
+            $fields['ai_audio_model'] = (string) ($config['ai_audio_model'] ?? '');
         }
 
         return $fields;
